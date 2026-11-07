@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHPirates Swarm</title>
+<style>
+  :root { --bg:#0f1720; --panel:#17212d; --ink:#e6edf3; --muted:#8b98a7;
+          --red:#e5484d; --amber:#f5a524; --green:#30a46c; --line:#26323f; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.4 system-ui, sans-serif; }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:baseline; flex-wrap:wrap; }
+  h1 { margin:0; font-size:20px; }
+  #summary { color:var(--muted); }
+  #status { margin-left:auto; color:var(--muted); font-size:12px; }
+  #status.bad { color:var(--red); font-weight:600; }
+  main { display:grid; grid-template-columns: 1fr 260px; gap:16px; padding:16px 20px; }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  .servers { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; align-content:start; }
+  .server, .agents { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .server h2, .agents h2 { margin:0 0 10px; font-size:15px; }
+  .ticket { border-left:5px solid var(--red); background:#1d2836; border-radius:6px; padding:8px 10px; margin-bottom:8px; }
+  .ticket.amber { border-color:var(--amber); }
+  .ticket.green { border-color:var(--green); }
+  .ticket.orphaned { border-color:var(--red); border-left-style:dashed; }
+  .row { display:flex; justify-content:space-between; gap:8px; }
+  .badge { font-size:11px; padding:1px 7px; border-radius:99px; font-weight:600; text-transform:uppercase; }
+  .red .badge, .orphaned .badge { background:var(--red); }
+  .amber .badge { background:var(--amber); color:#000; }
+  .green .badge { background:var(--green); }
+  .meta { color:var(--muted); font-size:12px; margin-top:4px; word-break:break-word; }
+  .notes { margin:6px 0 0; padding-left:16px; color:var(--muted); font-size:11px; }
+  .agent { padding:6px 0; border-bottom:1px solid var(--line); font-size:12px; }
+  .agent:last-child { border:0; }
+  .agent b { font-family:ui-monospace, monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PHPirates swarm</h1>
+  <span id="summary">loading…</span>
+  <span id="status"></span>
+</header>
+<main>
+  <section class="servers" id="servers"></section>
+  <aside class="agents"><h2>Agents alive</h2><div id="agents"></div></aside>
+</main>
+<script>
+const LABEL = { red:"open", amber:"patching", green:"patched", orphaned:"lease expired" };
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+
+function render(data) {
+  const byServer = {};
+  for (const t of data.tickets) (byServer[t.server] ||= []).push(t);
+  const counts = { red:0, amber:0, green:0, orphaned:0 };
+  data.tickets.forEach(t => counts[t.view]++);
+  document.getElementById("summary").textContent =
+    `${counts.green}/${data.tickets.length} patched · ${counts.amber} in progress · ${counts.red + counts.orphaned} open`;
+
+  const servers = document.getElementById("servers");
+  servers.replaceChildren();
+  for (const sid of Object.keys(byServer).sort()) {
+    const box = el("div", "server");
+    box.append(el("h2", "", "Server " + sid));
+    for (const t of byServer[sid]) {
+      const card = el("div", "ticket " + t.view);
+      const row = el("div", "row");
+      row.append(el("strong", "", `${t.vuln} (${t.type})`), el("span", "badge", LABEL[t.view]));
+      card.append(row);
+      let meta = "";
+      if (t.view === "amber") meta = `held by ${t.holder} · lease ${t.lease_left}s`;
+      if (t.view === "orphaned") meta = `${t.claimed_by} stopped renewing; free to claim`;
+      if (t.view === "green") meta = `patched by ${t.patched_by || "?"} · ${t.verified || ""}`;
+      if (meta) card.append(el("div", "meta", meta));
+      if (t.attempts && t.attempts.length) {
+        const ul = el("ul", "notes");
+        t.attempts.slice(-4).forEach(a => ul.append(el("li", "", a)));
+        card.append(ul);
+      }
+      box.append(card);
+    }
+    servers.append(box);
+  }
+
+  const agents = document.getElementById("agents");
+  agents.replaceChildren();
+  if (!data.agents.length) agents.append(el("div", "meta", "none"));
+  for (const a of data.agents) {
+    const d = el("div", "agent");
+    d.append(el("b", "", a.id));
+    d.append(el("div", "meta", `[${a.specialisms.join(", ")}] ${a.working_on ? "→ " + a.working_on : "idle"}`));
+    agents.append(d);
+  }
+}
+
+async function poll() {
+  const status = document.getElementById("status");
+  try {
+    const res = await fetch("api/state", { cache: "no-store" });
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error);
+    render(data);
+    status.className = "";
+    status.textContent = "updated " + new Date().toLocaleTimeString();
+  } catch (e) {
+    status.className = "bad";
+    status.textContent = "Redis unreachable: " + e.message;
+  }
+}
+poll();
+setInterval(poll, 2000);
+</script>
+</body>
+</html>
