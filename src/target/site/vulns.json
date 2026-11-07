@@ -1,0 +1,7 @@
+{
+  "vulns": [
+    {"id": "sqli-login",   "type": "sqli",       "file": "public/login.php",  "exploit": "exploits/sqli.py"},
+    {"id": "xss-search",   "type": "xss",        "file": "public/search.php", "exploit": "exploits/xss.py"},
+    {"id": "upload-share", "type": "fileupload", "file": "public/upload.php", "exploit": "exploits/upload.py"}
+  ]
+}

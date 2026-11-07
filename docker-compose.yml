@@ -1,0 +1,62 @@
+# PHPirates: stigmergic vulnerability-patching swarm.
+# No service here tells agents what to do. Agents coordinate only through Redis.
+name: phpirates
+
+x-target: &target
+  build: ./src/target
+  networks: [swarm]
+  restart: unless-stopped
+
+x-agent-env: &agent-env
+  REDIS_URL: redis://redis:6379/0
+  SERVERS_DIR: /servers
+  LLM_BASE_URL: ${LLM_BASE_URL:-http://host.docker.internal:11434/v1}
+  LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b}
+  LLM_MODEL_STRONG: ${LLM_MODEL_STRONG:-}
+  LOCK_TTL: ${LOCK_TTL:-90}
+  WORK_DELAY: ${WORK_DELAY:-0}
+
+x-agent: &agent
+  build: ./src/agent
+  init: true                       # so `docker stop` delivers signals promptly
+  networks: [swarm, hostlink]
+  extra_hosts: ["host.docker.internal:host-gateway"]
+  volumes:
+    - s1-site:/servers/s1
+    - s2-site:/servers/s2
+    - s3-site:/servers/s3
+  depends_on: [redis, s1, s2, s3]  # start order only; agents tolerate any of these being down
+  restart: "no"                    # a killed agent stays dead for the takeover demo
+
+services:
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks: [swarm]
+
+  s1: { <<: *target, volumes: ["s1-site:/var/www/site"] }
+  s2: { <<: *target, volumes: ["s2-site:/var/www/site"] }
+  s3: { <<: *target, volumes: ["s3-site:/var/www/site"] }
+
+  # Identical code, different specialisms; every vuln type is covered by 3 agents.
+  agent-a: { <<: *agent, environment: { <<: *agent-env, SPECIALISMS: "sqli,xss" } }
+  agent-b: { <<: *agent, environment: { <<: *agent-env, SPECIALISMS: "xss,fileupload" } }
+  agent-c: { <<: *agent, environment: { <<: *agent-env, SPECIALISMS: "fileupload,sqli" } }
+  agent-d: { <<: *agent, environment: { <<: *agent-env, SPECIALISMS: "sqli,xss,fileupload" } }
+
+  dashboard:
+    build: ./src/dashboard
+    environment: { REDIS_URL: "redis://redis:6379/0" }
+    networks: [swarm, hostlink]
+    ports: ["5000:5000"]
+    depends_on: [redis]
+
+networks:
+  swarm:
+    internal: true    # servers + Redis: no route out of the sandbox
+  hostlink: {}        # agents (to reach Ollama on the host) and dashboard (published port)
+
+volumes:
+  s1-site:
+  s2-site:
+  s3-site:
