@@ -183,6 +183,15 @@
     </div>
 
     <div class="rail">
+      <div class="card">
+        <div class="card-h"><span class="t">Guided demos</span></div>
+        <div class="controls">
+          <button id="scLease">Demo: lease takeover</button>
+          <button id="scGossip">Demo: Redis down &rarr; gossip</button>
+          <button id="scPart">Demo: network partition</button>
+          <p style="margin:4px 2px 0;font-size:11px;color:var(--faint);line-height:1.4">Each resets, gets the swarm busy, then triggers one feature so you can watch it happen.</p>
+        </div>
+      </div>
       <div class="card controls">
         <div class="row"><button class="danger" id="btnKill">Kill a working agent</button></div>
         <div class="row">
@@ -366,6 +375,7 @@
   function tick() {
     if (state.done) return;
     state.t++;
+    runSched();
 
     if (!coordOK()) {
       if (state.t - lastStallLog > 4) { addLog("takeover", "blackboard unreachable — swarm paused · enable gossip fallback"); lastStallLog = state.t; }
@@ -462,8 +472,40 @@
   }
   function reset() {
     build(); LOG = [];
+    settings.gossip = false; settings.rescan = false;
     document.getElementById("btnRedis").textContent = "Kill Redis";
     document.getElementById("btnRedis").classList.remove("on");
+    document.getElementById("btnGossip").classList.remove("on");
+    document.getElementById("btnRescan").classList.remove("on");
+    renderAll();
+  }
+
+  // Guided demos: reset, let the swarm get busy, then fire a scripted step on cue.
+  function runSched() {
+    if (!state.sched) return;
+    state.sched.forEach(function (s) { if (!s.fired && state.t >= s.at) { s.fired = true; s.fn(); } });
+  }
+  function startScenario(name) {
+    reset();
+    running = true; document.getElementById("btnPlay").textContent = "Pause";
+    var steps = [];
+    if (name === "lease") {
+      steps = [{ at: 6, fn: function () { addLog("sys", "SCENARIO: killing the agent that holds a ticket"); killWorking(); } }];
+      state.scenarioMsg = "Lease takeover — an agent dies mid-patch; watch its lease bar drain, the ticket go orphaned, then another agent TAKEOVER.";
+    } else if (name === "gossip") {
+      steps = [
+        { at: 5, fn: function () { addLog("sys", "SCENARIO: Redis goes down, gossip off — swarm pauses"); if (state.redisUp) toggleRedis(); } },
+        { at: 12, fn: function () { addLog("sys", "SCENARIO: turning on gossip fallback — agents coordinate peer-to-peer"); if (!settings.gossip) toggleGossip(); } }
+      ];
+      state.scenarioMsg = "Redis down, then gossip on — watch the swarm pause (board turns red), then resume on the peer ring.";
+    } else if (name === "partition") {
+      steps = [
+        { at: 6, fn: function () { var w = agents.filter(function (a) { return !a.dead && a.workingOn; }); if (w.length) { addLog("sys", "SCENARIO: isolating " + w[0].id); if (!w[0].iso) toggleIso(w[0]); } } },
+        { at: 15, fn: function () { var z = agents.filter(function (a) { return a.iso; }); if (z.length) { addLog("sys", "SCENARIO: reconnecting " + z[0].id); toggleIso(z[0]); } } }
+      ];
+      state.scenarioMsg = "Partition — one agent is cut off, its lease lapses and the work is taken over; then it rejoins.";
+    }
+    state.sched = steps;
     renderAll();
   }
 
@@ -677,6 +719,7 @@
       nm.textContent = "Agents claim tickets from the blackboard and verify each patch. "
         + c.green + " clean · " + c.amber + " patching · " + c.red + " vulnerable.";
     }
+    if (state.scenarioMsg && !state.done) nm.textContent = "Demo · " + state.scenarioMsg;
   }
 
   function drawChart() {
@@ -737,6 +780,9 @@
   document.getElementById("btnReset").addEventListener("click", reset);
   document.getElementById("btnGossip").addEventListener("click", function () { toggleGossip(); renderAll(); });
   document.getElementById("btnRescan").addEventListener("click", function () { toggleRescan(); renderAll(); });
+  document.getElementById("scLease").addEventListener("click", function () { startScenario("lease"); });
+  document.getElementById("scGossip").addEventListener("click", function () { startScenario("gossip"); });
+  document.getElementById("scPart").addEventListener("click", function () { startScenario("partition"); });
   document.getElementById("btnPlay").addEventListener("click", function () { running = !running; this.textContent = running ? "Pause" : "Play"; });
   document.getElementById("speed").addEventListener("input", function () { speed = +this.value; });
   document.getElementById("agents").addEventListener("click", function (ev) {
