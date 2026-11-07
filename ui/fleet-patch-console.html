@@ -1,8 +1,8 @@
 <title>PHPatch</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-  /* Ops-room console (Hormuz Flow style): light white ground, slate text, blue/oil accents.
-     One deliberate light look — no dark theme. Network graph + control rail, chart + log beneath. */
+  /* Ops-room console (OXHACK Hormuz Flow style): light ground, slate text, blue/oil accents.
+     Live architecture map + stigmergic ticket blackboard with leases. Single light look. */
   :root {
     color-scheme: light;
     --bg: #f6f8fb; --panel: #ffffff; --panel2: #eef2f7; --line: #e1e7ef; --line2: #cfd8e3;
@@ -19,14 +19,8 @@
   body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; -webkit-font-smoothing: antialiased; }
   .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
-  .app {
-    min-height: 100%;
-    display: flex; flex-direction: column; gap: 12px;
-    max-width: 1260px; margin: 0 auto;
-    padding-left: max(14px, env(safe-area-inset-left, 0px));
-    padding-right: max(14px, env(safe-area-inset-right, 0px));
-    padding-block: 14px;
-  }
+  .app { min-height: 100%; display: flex; flex-direction: column; gap: 12px; max-width: 1260px; margin: 0 auto;
+    padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px)); padding-block: 14px; }
 
   .bar { display: flex; flex-wrap: wrap; gap: 10px 16px; justify-content: space-between; align-items: center; }
   .brand { display: flex; align-items: center; gap: 10px; }
@@ -34,94 +28,109 @@
   h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: .01em; }
   .tagline { color: var(--muted); font-size: 12px; margin: 1px 0 0; }
   .tools { display: flex; align-items: center; gap: 8px; }
-  .pill {
-    min-height: 26px; display: inline-flex; align-items: center; gap: 6px;
-    padding: 0 10px; font-family: var(--mono); font-size: 11px; letter-spacing: .8px;
-    border-radius: 999px; border: 1px solid var(--line2); color: var(--muted);
-  }
+  .pill { min-height: 26px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; font-family: var(--mono);
+    font-size: 11px; letter-spacing: .8px; border-radius: 999px; border: 1px solid var(--line2); color: var(--muted); }
   .pill.sim { border-style: dashed; }
-  .pill .d { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex: none; }
-  .pill.hq .d { background: var(--green); }
-  .pill.hq.off { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, var(--line2)); }
-  .pill.hq.off .d { background: var(--red); }
 
-  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 296px; gap: 12px; align-items: stretch; }
-  @media (max-width: 840px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+  .now { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+  .now .phase { font-family: var(--mono); font-size: 11px; letter-spacing: .8px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line2); color: var(--muted); white-space: nowrap; flex: none; }
+  .now .phase.run { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--line2)); }
+  .now .phase.alarm { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, var(--line2)); }
+  .now .phase.done { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, var(--line2)); }
+  .now .msg { font-size: 13.5px; color: var(--text); min-width: 0; }
 
   .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
-  .card-h { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+  .card-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
   .card-h .t { font-size: 12px; text-transform: uppercase; letter-spacing: .11em; color: var(--muted); font-weight: 600; }
 
-  .graph-wrap { position: relative; }
-  #graph { display: block; width: 100%; height: 440px; border-radius: 0 0 var(--radius) var(--radius); }
-  @media (max-width: 840px) { #graph { height: 340px; } }
+  .arch-body { padding: 6px 10px 10px; }
+  #arch { display: block; width: 100%; height: auto; }
+
+  .clegend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .clegend span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .clegend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .clegend i.orph { background: transparent; border: 1px dashed var(--red); }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+  .board { display: grid; grid-template-columns: 54px repeat(3, minmax(0, 1fr)); gap: 8px; padding: 12px; }
+  .colh { font-size: 11px; color: var(--muted); font-weight: 600; text-align: center; align-self: end; padding-bottom: 2px; }
+  .rowh { font-family: var(--mono); font-size: 12px; color: var(--muted); display: flex; align-items: center; justify-content: center; }
+  .cell { border: 1px solid var(--line); border-radius: 10px; padding: 8px 9px; display: flex; flex-direction: column; gap: 5px; min-height: 96px; background: var(--panel); }
+  .cell.amber { background: color-mix(in srgb, var(--amber) 5%, #fff); }
+  .cell.green { background: color-mix(in srgb, var(--green) 6%, #fff); }
+  .cell.orphaned { border-style: dashed; border-color: color-mix(in srgb, var(--red) 45%, var(--line2)); }
+  .stp { font-family: var(--mono); font-size: 10px; letter-spacing: .4px; padding: 2px 7px; border-radius: 999px; border: 1px solid; display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; }
+  .stp.red { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, var(--line2)); background: color-mix(in srgb, var(--red) 7%, #fff); }
+  .stp.amber { color: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 45%, var(--line2)); background: color-mix(in srgb, var(--amber) 8%, #fff); }
+  .stp.green { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, var(--line2)); background: color-mix(in srgb, var(--green) 8%, #fff); }
+  .stp.orph { color: var(--red); border-style: dashed; border-color: color-mix(in srgb, var(--red) 45%, var(--line2)); }
+  .cell .hold { font-family: var(--mono); font-size: 11px; color: var(--text); }
+  .cell .note { font-size: 10.5px; color: var(--muted); line-height: 1.35; }
+  .cell .note.red { color: var(--red); }
+  .lease { height: 5px; border-radius: 3px; background: var(--panel2); overflow: hidden; margin-top: auto; }
+  .lease i { display: block; height: 100%; background: var(--amber); transition: width .2s linear; }
+  .lease.gone i { background: var(--red); }
 
   .rail { display: flex; flex-direction: column; gap: 12px; }
   .controls { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
   .row { display: flex; gap: 8px; }
   .row > button { flex: 1; }
-  button {
-    font: inherit; font-weight: 500; color: var(--text); background: var(--panel2);
-    border: 1px solid var(--line2); border-radius: 8px; min-height: 40px; padding: 0 12px;
-    cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    transition: border-color .15s, background .15s, transform .05s;
-  }
+  button { font: inherit; font-weight: 500; color: var(--text); background: var(--panel2); border: 1px solid var(--line2); border-radius: 8px; min-height: 40px; padding: 0 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: border-color .15s, background .15s, transform .05s; }
   button:hover { border-color: var(--muted); }
   button:active { transform: translateY(1px); }
   button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  button.primary { background: color-mix(in srgb, var(--accent) 12%, #fff); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-  button.primary:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, #fff); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
   button.danger { border-color: color-mix(in srgb, var(--red) 45%, var(--line2)); color: var(--red); }
   button.danger:hover { border-color: var(--red); }
-  button.danger.active { background: color-mix(in srgb, var(--red) 12%, #fff); border-color: var(--red); font-weight: 600; }
-  button.warn.active { background: color-mix(in srgb, var(--amber) 14%, #fff); border-color: var(--amber); color: var(--amber-soft); font-weight: 600; }
+  button.danger.on { background: color-mix(in srgb, var(--red) 12%, #fff); border-color: var(--red); }
+  button.warn.on { background: color-mix(in srgb, var(--amber) 14%, #fff); border-color: var(--amber); color: var(--amber-soft); }
+  .speedrow { display: flex; align-items: center; gap: 10px; padding-top: 2px; }
+  .speedrow label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+  input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); min-height: 32px; }
 
-  .legend { padding: 12px 14px; display: flex; flex-direction: column; gap: 9px; }
-  .legend-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; }
-  .swatch { width: 12px; height: 12px; border-radius: 50%; flex: none; border: 1px solid rgba(20,32,46,.12); }
-  .legend-row b { font-weight: 600; min-width: 50px; display: inline-block; }
-  .legend-row .lab { color: var(--muted); font-size: 11.5px; }
+  .agents { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .agent { display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; }
+  .agent.dead { opacity: .5; }
+  .agent.iso { border-style: dashed; border-color: color-mix(in srgb, var(--amber) 50%, var(--line2)); }
+  .agent .top { display: flex; align-items: center; gap: 7px; }
+  .hb { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; }
+  .agent.dead .hb { background: var(--dead); }
+  .agent.iso .hb { background: var(--amber); }
+  .agent .id { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+  .agent .tag { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--faint); }
+  .chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 9.5px; color: var(--muted); border: 1px solid var(--line2); border-radius: 4px; padding: 1px 5px; }
+  .agent .wo { font-size: 11px; color: var(--muted); min-height: 15px; }
+  .agent .btns { display: flex; gap: 6px; }
+  .agent .btns button { min-height: 28px; font-size: 11px; padding: 0 8px; flex: 1; }
 
   .stat { display: flex; align-items: baseline; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid var(--line); }
   .stat:last-child { border-bottom: 0; }
   .stat .k { color: var(--muted); font-size: 12.5px; }
-  .stat .v { font-family: var(--mono); font-size: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
-  .v.red { color: var(--red); } .v.amber { color: var(--amber-soft); } .v.green { color: var(--green); }
+  .stat .v { font-family: var(--mono); font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .v.red { color: var(--red); } .v.amber { color: var(--amber-soft); } .v.green { color: var(--green); } .v.accent { color: var(--accent); }
+
+  .roadmap { padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+  .ri { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text); }
+  .ri .b { font-family: var(--mono); font-size: 9px; letter-spacing: .5px; padding: 1px 6px; border-radius: 4px; border: 1px solid; flex: none; }
+  .ri .b.live { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, var(--line2)); background: color-mix(in srgb, var(--green) 8%, #fff); }
+  .ri .b.plan { color: var(--faint); border-color: var(--line2); }
 
   .bottom { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px; }
-  @media (max-width: 840px) { .bottom { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 860px) { .bottom { grid-template-columns: minmax(0, 1fr); } }
   #chart { display: block; width: 100%; height: 190px; }
   .log-body { height: 190px; overflow-y: auto; padding: 8px 12px; font-family: var(--mono); font-size: 11.5px; line-height: 1.75; display: flex; flex-direction: column; gap: 1px; }
   .log-line { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .log-line .ts { color: var(--faint); }
-  .log-line.worm { color: var(--amber-soft); }
-  .log-line.patch { color: var(--green); }
-  .log-line.hq { color: var(--red); }
-  .log-line.stall { color: var(--faint); }
-
-  .speedrow { display: flex; align-items: center; gap: 10px; padding-top: 2px; }
-  .speedrow label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
-  input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); min-height: 32px; }
+  .log-line.claim { color: var(--accent-soft); }
+  .log-line.green { color: var(--green); }
+  .log-line.fail { color: var(--amber-soft); }
+  .log-line.takeover { color: var(--red); }
+  .log-line.sys { color: var(--faint); }
   .foot { color: var(--faint); font-size: 11px; font-family: var(--mono); text-align: center; padding-top: 2px; }
   .foot code { background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
-
-  .now { display: flex; align-items: center; gap: 10px; padding: 11px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
-  .now .phase { font-family: var(--mono); font-size: 11px; letter-spacing: .8px; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line2); color: var(--muted); white-space: nowrap; flex: none; }
-  .now .phase.worm { color: var(--amber-soft); border-color: color-mix(in srgb, var(--amber) 45%, var(--line2)); }
-  .now .phase.peer { color: var(--red); border-color: color-mix(in srgb, var(--red) 45%, var(--line2)); }
-  .now .phase.done { color: var(--green); border-color: color-mix(in srgb, var(--green) 45%, var(--line2)); }
-  .now .msg { font-size: 13.5px; color: var(--text); min-width: 0; }
-  .flow { display: flex; align-items: center; gap: 0; padding: 10px 14px; border-top: 1px solid var(--line); flex-wrap: wrap; }
-  .flow .step { display: flex; align-items: center; gap: 8px; flex: 1 1 170px; min-width: 0; }
-  .flow .step .sw { width: 11px; height: 11px; border-radius: 50%; flex: none; border: 1px solid rgba(20,32,46,.12); }
-  .flow .step .tx { font-size: 11.5px; color: var(--muted); min-width: 0; }
-  .flow .step .tx b { color: var(--text); font-weight: 600; }
-  .flow .arrow { align-self: center; color: var(--faint); padding: 0 8px; flex: none; }
-  @media (max-width: 560px) { .flow .arrow { display: none; } }
-  .clegend { display: flex; align-items: center; gap: 11px; }
-  .clegend span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
-  .clegend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 </style>
 
 <div class="app">
@@ -135,7 +144,7 @@
       </svg>
       <div>
         <h1>PHPatch</h1>
-        <p class="tagline">self-coordinating PHP patch fleet · spreads the fix faster than the worm</p>
+        <p class="tagline">stigmergic patch swarm · agents coordinate only through the blackboard</p>
       </div>
     </div>
     <div class="tools">
@@ -145,36 +154,39 @@
   </div>
 
   <div class="now">
-    <span class="phase" id="nowPill">at rest</span>
-    <span class="msg" id="nowMsg">All servers vulnerable. Press "Release worm" to begin.</span>
+    <span class="phase run" id="nowPill">running</span>
+    <span class="msg" id="nowMsg">Agents are claiming tickets from the blackboard.</span>
+  </div>
+
+  <div class="card">
+    <div class="card-h"><span class="t">System architecture — live</span><span class="pill mono" id="archMode">stigmergic · no coordinator</span></div>
+    <div class="arch-body"><canvas id="arch"></canvas></div>
   </div>
 
   <div class="grid">
-    <div class="card graph-wrap">
+    <div class="card">
       <div class="card-h">
-        <span class="t">Network graph</span>
-        <span class="pill hq" id="hqBadge"><span class="d"></span>dispatcher online</span>
+        <span class="t">Redis blackboard — tickets</span>
+        <span class="clegend">
+          <span><i style="background:var(--red)"></i>vulnerable</span>
+          <span><i style="background:var(--amber)"></i>patching</span>
+          <span><i class="orph"></i>orphaned</span>
+          <span><i style="background:var(--green)"></i>clean</span>
+        </span>
       </div>
-      <canvas id="graph"></canvas>
-      <div class="flow">
-        <div class="step"><span class="sw" style="background:var(--red)"></span><span class="tx"><b>Red</b> — vulnerable, backdoor open</span></div>
-        <span class="arrow">→</span>
-        <div class="step"><span class="sw" style="background:var(--amber)"></span><span class="tx"><b>Amber</b> — worm in, PHP patched, agent cleaning</span></div>
-        <span class="arrow">→</span>
-        <div class="step"><span class="sw" style="background:var(--green)"></span><span class="tx"><b>Green</b> — site verified clean, now a patch source</span></div>
-      </div>
+      <div class="board" id="board"></div>
     </div>
 
     <div class="rail">
       <div class="card controls">
-        <button class="primary" id="btnWorm">Release worm</button>
+        <div class="row"><button class="danger" id="btnKill">Kill a working agent</button></div>
         <div class="row">
-          <button class="danger" id="btnHQ">Kill dispatcher</button>
-          <button id="btnKill">Kill a server</button>
+          <button class="danger" id="btnRedis">Kill Redis</button>
+          <button id="btnReset">Reset</button>
         </div>
         <div class="row">
-          <button class="warn" id="btnCut">Cut links</button>
-          <button id="btnReset">Reset</button>
+          <button class="warn" id="btnGossip">Gossip fallback</button>
+          <button class="warn" id="btnRescan">Re-scan</button>
         </div>
         <div class="speedrow">
           <button id="btnPlay" style="flex:none;min-width:80px">Pause</button>
@@ -184,23 +196,29 @@
       </div>
 
       <div class="card">
-        <div class="card-h"><span class="t">State legend</span></div>
-        <div class="legend">
-          <div class="legend-row"><span class="swatch" style="background:var(--red)"></span><b>Red</b><span class="lab">PHP backdoor present, site vulnerable</span></div>
-          <div class="legend-row"><span class="swatch" style="background:var(--amber)"></span><b>Amber</b><span class="lab">worm in, PHP patched, agent cleaning</span></div>
-          <div class="legend-row"><span class="swatch" style="background:var(--green)"></span><b>Green</b><span class="lab">agent declares site vuln-free</span></div>
-          <div class="legend-row"><span class="swatch" style="background:var(--dead)"></span><b>Down</b><span class="lab">server killed / offline</span></div>
+        <div class="card-h"><span class="t">Agents</span><span class="pill mono" id="alivePill">4 up</span></div>
+        <div class="agents" id="agents"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><span class="t">Status</span><span class="pill mono" id="pctPill">0% clean</span></div>
+        <div>
+          <div class="stat"><span class="k">Blackboard</span><span class="v accent" id="sBoard">Redis</span></div>
+          <div class="stat"><span class="k">Vulnerable</span><span class="v red" id="sRed">9</span></div>
+          <div class="stat"><span class="k">Patching</span><span class="v amber" id="sAmber">0</span></div>
+          <div class="stat"><span class="k">Clean (verified)</span><span class="v green" id="sGreen">0</span></div>
+          <div class="stat"><span class="k">Lease takeovers</span><span class="v accent" id="sTake">0</span></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-h"><span class="t">Status</span><span class="pill mono" id="pctPill">0% green</span></div>
-        <div>
-          <div class="stat"><span class="k">Red remaining</span><span class="v red" id="sRed">0</span></div>
-          <div class="stat"><span class="k">Cleaning (amber)</span><span class="v amber" id="sAmber">0</span></div>
-          <div class="stat"><span class="k">Patched (green)</span><span class="v green" id="sGreen">0</span></div>
-          <div class="stat"><span class="k">Stalled (isolated)</span><span class="v amber" id="sStall">0</span></div>
-          <div class="stat"><span class="k">Red when HQ died</span><span class="v" id="sKill">—</span></div>
+        <div class="card-h"><span class="t">Hardening roadmap</span></div>
+        <div class="roadmap">
+          <div class="ri"><span class="b live">LIVE</span><span>Gossip fallback if Redis drops</span></div>
+          <div class="ri"><span class="b live">LIVE</span><span>Patch-kit cache (skip the model)</span></div>
+          <div class="ri"><span class="b live">LIVE</span><span>Periodic re-scan (catch regressions)</span></div>
+          <div class="ri"><span class="b plan">PLAN</span><span>Second-agent confirm before trust</span></div>
+          <div class="ri"><span class="b plan">PLAN</span><span>Signed patches (anti-rogue-agent)</span></div>
         </div>
       </div>
     </div>
@@ -208,16 +226,16 @@
 
   <div class="bottom">
     <div class="card">
-      <div class="card-h"><span class="t">Fleet state over time</span><span class="clegend"><span><i style="background:var(--green)"></i>green</span><span><i style="background:var(--amber)"></i>amber</span><span><i style="background:var(--red)"></i>red</span></span></div>
+      <div class="card-h"><span class="t">Tickets clean over time</span><span class="clegend"><span><i style="background:var(--green)"></i>clean</span><span><i style="background:var(--amber)"></i>patching</span><span><i style="background:var(--red)"></i>vulnerable</span></span></div>
       <canvas id="chart"></canvas>
     </div>
     <div class="card">
-      <div class="card-h"><span class="t">Agent &amp; worm log</span><span class="pill mono" id="logCount">0</span></div>
+      <div class="card-h"><span class="t">Swarm log</span><span class="pill mono" id="logCount">0</span></div>
       <div class="log-body" id="log"></div>
     </div>
   </div>
 
-  <div class="foot">Simulated telemetry — click any node to seed the worm there. Wire real servers into <code>pollServers()</code> to go live.</div>
+  <div class="foot">Simulated blackboard with a live architecture map — kill an agent and watch its lease expire and get taken over; kill Redis and turn on gossip fallback to keep going. Mirrors the real <code>lock:</code> / <code>vuln:</code> keys.</div>
 </div>
 
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -225,443 +243,473 @@
 (function () {
   "use strict";
 
-  var VULNS = ["sqli-string-concat","xss-unescaped-echo","cmd-injection-shellexec",
-               "path-traversal","weak-auth-equals","unserialize-user-input"];
-  var FIXES = {
-    "sqli-string-concat":"PDO prepared statement",
-    "xss-unescaped-echo":"htmlspecialchars() on output",
-    "cmd-injection-shellexec":"escapeshellarg() + allowlist",
-    "path-traversal":"realpath() + basedir check",
-    "weak-auth-equals":"hash_equals() constant-time",
-    "unserialize-user-input":"json_decode() instead"
-  };
-  var N = 9;
+  var SERVERS = ["s1", "s2", "s3"];
+  var VTYPES = [
+    { id: "sqli-login",   type: "sqli",       col: "SQLi · login" },
+    { id: "xss-search",   type: "xss",        col: "XSS · search" },
+    { id: "upload-share", type: "fileupload", col: "Upload · share" }
+  ];
+  var AGENT_DEFS = [
+    { id: "agent-a", spec: ["sqli", "xss"] },
+    { id: "agent-b", spec: ["xss", "fileupload"] },
+    { id: "agent-c", spec: ["fileupload", "sqli"] },
+    { id: "agent-d", spec: ["sqli", "xss", "fileupload"] }
+  ];
+  var TOTAL = SERVERS.length * VTYPES.length;
+  var TTL = 6;
+  var SUCCESS = 0.70, SUCCESS_ESC = 0.96, SUCCESS_CACHE = 0.95;
+  var COOLDOWN = 3;
 
-  var seed = 1337;
-  function rnd() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
-
+  var tickets = {}, agents = [], order = [];
   var state = {};
-  var running = true;
-  var stepEvery = 0.75;
-  var acc = 0, last = 0, speed = 3;
+  var settings = { gossip: false, rescan: false };
+  var running = true, speed = 3, acc = 0, lastTs = 0, stepEvery = 0.78;
+  var lastStallLog = -99;
 
-  var graph = document.getElementById("graph");
-  var gx = graph.getContext("2d");
-  var chart = document.getElementById("chart");
-  var cx = chart.getContext("2d");
-
+  var arch = document.getElementById("arch"), ax = arch.getContext("2d");
+  var chart = document.getElementById("chart"), cx = chart.getContext("2d");
   function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
   var COL = {};
   function refreshColors() {
-    ["bg","panel","panel2","line","line2","text","muted","faint","accent","red","amber","amber-soft","green","dead"]
+    ["panel2", "line", "line2", "text", "muted", "faint", "accent", "red", "amber", "amber-soft", "green", "dead"]
       .forEach(function (k) { COL[k] = css("--" + k); });
   }
 
-  function buildGraph() {
-    seed = 1337;
-    var nodes = [];
-    for (var i = 0; i < N; i++) {
-      var p, ok, tries = 0;
-      do {
-        p = { x: 0.1 + rnd() * 0.8, y: 0.12 + rnd() * 0.76 };
-        ok = true;
-        for (var j = 0; j < nodes.length; j++) {
-          var dx = p.x - nodes[j].x, dy = p.y - nodes[j].y;
-          if (dx * dx + dy * dy < 0.045) { ok = false; break; }
-        }
-      } while (!ok && ++tries < 200);
-      nodes.push({ id: i, name: "web-" + (i < 9 ? "0" : "") + (i + 1),
-                   x: p.x, y: p.y, st: "red", prog: 0, vuln: VULNS[i % VULNS.length], dead: false });
-    }
-    var edges = [];
-    var R2 = 0.11;
-    for (var a = 0; a < N; a++) for (var b = a + 1; b < N; b++) {
-      var ddx = nodes[a].x - nodes[b].x, ddy = nodes[a].y - nodes[b].y;
-      if (ddx * ddx + ddy * ddy < R2) edges.push([a, b]);
-    }
-    for (var n = 0; n < N; n++) {
-      var deg = edges.filter(function (e) { return e[0] === n || e[1] === n; }).length;
-      if (deg === 0) {
-        var best = -1, bd = 9;
-        for (var m = 0; m < N; m++) if (m !== n) {
-          var ex = nodes[n].x - nodes[m].x, ey = nodes[n].y - nodes[m].y, d = ex * ex + ey * ey;
-          if (d < bd) { bd = d; best = m; }
-        }
-        edges.push([Math.min(n, best), Math.max(n, best)]);
-      }
-    }
-    var pz = 0; for (var k = 1; k < N; k++) if (nodes[k].x < nodes[pz].x) pz = k;
+  function rint(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function key(sid, v) { return sid + ":" + v.id; }
+  function coordOK() { return state.redisUp || settings.gossip; }
 
-    state = {
-      nodes: nodes, edges: edges, allEdges: edges.slice(),
-      hq: true, cut: false, pz: pz, t: 0,
-      wormOut: false, killAt: null, history: [], log: [], done: false
-    };
-  }
-
-  function neighbors(i) {
-    var out = [];
-    state.edges.forEach(function (e) {
-      if (e[0] === i && !state.nodes[e[1]].dead) out.push(state.nodes[e[1]]);
-      else if (e[1] === i && !state.nodes[e[0]].dead) out.push(state.nodes[e[0]]);
+  function build() {
+    tickets = {}; order = [];
+    SERVERS.forEach(function (sid) {
+      VTYPES.forEach(function (v) {
+        var k = key(sid, v);
+        tickets[k] = { k: k, server: sid, type: v.type, vuln: v.id,
+          status: "red", lock: null, claimed_by: null, attempts: 0, cached: false, cooldown: 0 };
+        order.push(k);
+      });
     });
-    return out;
+    agents = AGENT_DEFS.map(function (d) {
+      return { id: d.id, spec: d.spec.slice(), dead: false, iso: false, workingOn: null, workLeft: 0 };
+    });
+    state = { t: 0, takeovers: 0, history: [], events: [], done: false, redisUp: true, kit: {} };
   }
 
-  function addLog(kind, msg) {
-    state.log.unshift({ t: state.t, kind: kind, msg: msg });
-    if (state.log.length > 120) state.log.pop();
+  function agentById(id) { for (var i = 0; i < agents.length; i++) if (agents[i].id === id) return agents[i]; return null; }
+
+  var LOG = [];
+  function addLog(kind, msg) { LOG.unshift({ t: state.t, kind: kind, msg: msg }); if (LOG.length > 140) LOG.pop(); }
+
+  function counts() {
+    var r = 0, a = 0, g = 0, o = 0;
+    order.forEach(function (k) {
+      var t = tickets[k];
+      if (t.status === "green") g++;
+      else if (t.status === "orphaned") o++;
+      else if (t.lock) a++;
+      else r++;
+    });
+    return { red: r, amber: a, green: g, orph: o };
+  }
+
+  function phaseOf(a) {
+    if (!a.workingOn) return "idle";
+    var tk = tickets[a.workingOn];
+    if (tk && tk.cached) return "verify";
+    return a.workLeft <= 2 ? "verify" : "think";
+  }
+
+  function resolve(agent, k) {
+    var tk = tickets[k];
+    var escalated = tk.attempts >= 2;
+    var p = tk.cached ? SUCCESS_CACHE : (escalated ? SUCCESS_ESC : SUCCESS);
+    if (Math.random() < p) {
+      state.kit[tk.type] = true;
+      var via = tk.cached ? " (cached kit)" : escalated ? " (strong model)" : "";
+      tk.status = "green"; tk.lock = null; tk.claimed_by = null; tk.patched_by = agent.id; tk.cached = false;
+      addLog("green", agent.id + " GREEN " + k + " · verified" + via);
+    } else {
+      tk.attempts++;
+      var why = Math.random() < 0.5 ? "exploit still works" : "patch broke the site — reverted";
+      tk.status = "red"; tk.lock = null; tk.claimed_by = null; tk.cached = false; tk.cooldown = state.t + COOLDOWN;
+      addLog("fail", agent.id + " FAIL " + k + " · " + why + (tk.attempts >= 2 ? " · escalating" : ""));
+    }
+    agent.workingOn = null; agent.workLeft = 0;
+  }
+
+  function tryClaim(agent) {
+    var cands = [];
+    order.forEach(function (k) {
+      var t = tickets[k];
+      if (t.status === "green" || t.lock) return;
+      if (agent.spec.indexOf(t.type) < 0) return;
+      if (t.cooldown > state.t) return;
+      cands.push(k);
+    });
+    if (!cands.length) return;
+    var k = cands[rint(0, cands.length - 1)], tk = tickets[k];
+    var prev = tk.claimed_by;
+    var takeover = (tk.status === "orphaned") && prev && prev !== agent.id;
+    var cached = !!state.kit[tk.type] && tk.attempts === 0;
+    tk.lock = { holder: agent.id, lease: TTL };
+    tk.status = "amber"; tk.claimed_by = agent.id; tk.cached = cached;
+    agent.workingOn = k; agent.workLeft = cached ? rint(2, 3) : rint(3, 6);
+    if (takeover) { state.takeovers++; addLog("takeover", agent.id + " TAKEOVER of " + k + " from dead " + prev); }
+    else addLog("claim", agent.id + " claimed " + k + (cached ? " · cached kit" : " (" + tk.type + ")"));
   }
 
   function tick() {
     if (state.done) return;
     state.t++;
-    var stalled = 0;
 
-    state.nodes.forEach(function (nd) {
-      if (nd.dead) return;
-      nd.stalled = false;
-      if (nd.st === "red" && state.wormOut) {
-        var carrier = neighbors(nd.id).some(function (x) { return x.st === "amber" || x.st === "green"; });
-        if (carrier && rnd() < 0.5) {
-          nd.st = "amber"; nd.prog = 0;
-          addLog("worm", nd.name + " <- worm in · PHP backdoor patched · amber");
+    if (!coordOK()) {
+      if (state.t - lastStallLog > 4) { addLog("takeover", "blackboard unreachable — swarm paused · enable gossip fallback"); lastStallLog = state.t; }
+      pushHistory(); renderAll(); return;
+    }
+
+    // Improvement: periodic re-scan reopens a silently-regressed green ticket.
+    if (settings.rescan) {
+      order.forEach(function (k) {
+        var tk = tickets[k];
+        if (tk.status === "green" && Math.random() < 0.012) {
+          tk.status = "red"; tk.lock = null; tk.claimed_by = null; tk.patched_by = null; tk.attempts = 0;
+          state.done = false;
+          addLog("sys", "re-scan: regression on " + k + " — reopened");
         }
-      } else if (nd.st === "amber") {
-        var hasGreen = neighbors(nd.id).some(function (x) { return x.st === "green"; });
-        if (state.hq || hasGreen) {
-          nd.prog += 0.14 + rnd() * 0.12;
-          if (nd.prog >= 1) {
-            nd.st = "green"; nd.prog = 1;
-            var src = (hasGreen && !state.hq) ? "peer kit" : (state.hq ? "dispatcher" : "peer kit");
-            addLog("patch", nd.name + " clean · " + nd.vuln + " -> " + FIXES[nd.vuln] + " (" + src + ")");
-          }
-        } else {
-          stalled++; nd.stalled = true;
+      });
+    }
+
+    // Phase A: leases renew while the holder is alive and connected; otherwise decay to expiry.
+    order.forEach(function (k) {
+      var tk = tickets[k];
+      if (!tk.lock) return;
+      var h = agentById(tk.lock.holder);
+      if (h && !h.dead && !h.iso && h.workingOn === k) { tk.lock.lease = TTL; }
+      else {
+        tk.lock.lease -= 1;
+        if (tk.lock.lease <= 0) {
+          tk.lock = null; tk.status = "orphaned";
+          addLog("sys", "lease on " + k + " expired — holder " + (tk.claimed_by || "?") + " gone, reclaimable");
         }
       }
     });
-    state.stalledCount = stalled;
 
-    if (stalled > 0 && !state.hq && state.t % 4 === 0) {
-      addLog("stall", stalled + " server(s) stalled: no HQ, no green neighbour yet");
+    // Phase B: agents act independently.
+    agents.forEach(function (agent) {
+      if (agent.dead) return;
+      if (agent.iso) {
+        if (agent.workingOn) {
+          var lk = tickets[agent.workingOn].lock;
+          if (!lk || lk.holder !== agent.id) { addLog("sys", agent.id + " isolated — dropped " + agent.workingOn); agent.workingOn = null; }
+        }
+        return;
+      }
+      if (agent.workingOn) {
+        var lk = tickets[agent.workingOn].lock;
+        if (!lk || lk.holder !== agent.id) { agent.workingOn = null; return; }
+        agent.workLeft -= 1;
+        if (agent.workLeft <= 0) resolve(agent, agent.workingOn);
+      } else { tryClaim(agent); }
+    });
+
+    pushHistory();
+    var c = counts();
+    if (c.green === TOTAL && !state.done) { state.done = true; addLog("green", "all " + TOTAL + " tickets clean · swarm idle · t+" + state.t); }
+    renderAll();
+  }
+
+  function pushHistory() {
+    var c = counts();
+    state.history.push({ t: state.t, green: c.green, amber: c.amber + c.orph, red: c.red });
+    if (state.history.length > 400) state.history.shift();
+  }
+
+  // ---- chaos ----
+  function killWorking() {
+    var pool = agents.filter(function (a) { return !a.dead && a.workingOn; });
+    if (!pool.length) pool = agents.filter(function (a) { return !a.dead; });
+    if (pool.length) killAgent(pool[rint(0, pool.length - 1)]);
+  }
+  function killAgent(a) {
+    if (a.dead) return;
+    a.dead = true;
+    state.events.push({ t: state.t });
+    addLog("takeover", a.id + " KILLED" + (a.workingOn ? " mid-patch on " + a.workingOn + " — its lease will expire" : ""));
+  }
+  function toggleIso(a) { a.iso = !a.iso; addLog("sys", a.id + (a.iso ? " isolated from the blackboard" : " reconnected")); }
+  function toggleRedis() {
+    state.redisUp = !state.redisUp;
+    var b = document.getElementById("btnRedis");
+    if (!state.redisUp) { b.textContent = "Restore Redis"; b.classList.add("on");
+      addLog("takeover", "REDIS DOWN" + (settings.gossip ? " — gossip fallback carrying coordination" : " — swarm paused (no gossip)")); }
+    else { b.textContent = "Kill Redis"; b.classList.remove("on");
+      addLog("sys", "Redis restored" + (settings.gossip ? " — gossip state CRDT-merged back in" : "")); state.events.push({ t: state.t }); }
+  }
+  function toggleGossip() {
+    settings.gossip = !settings.gossip;
+    document.getElementById("btnGossip").classList.toggle("on", settings.gossip);
+    addLog("sys", "gossip fallback " + (settings.gossip ? "ON — agents can coordinate without Redis" : "OFF"));
+  }
+  function toggleRescan() {
+    settings.rescan = !settings.rescan;
+    document.getElementById("btnRescan").classList.toggle("on", settings.rescan);
+    addLog("sys", "periodic re-scan " + (settings.rescan ? "ON — green tickets re-checked for regressions" : "OFF"));
+  }
+  function reset() {
+    build(); LOG = [];
+    document.getElementById("btnRedis").textContent = "Kill Redis";
+    document.getElementById("btnRedis").classList.remove("on");
+    renderAll();
+  }
+
+  // ---- live architecture map ----
+  function fitC(c, ctx, h) {
+    var r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    var w = r.width || 600;
+    c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+    c.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: w, h: h };
+  }
+  function rr(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function node(ctx, cxp, cyp, w, h, stroke, title, sub, fillTint) {
+    rr(ctx, cxp - w / 2, cyp - h / 2, w, h, 9);
+    ctx.fillStyle = fillTint || "#ffffff"; ctx.fill();
+    ctx.lineWidth = 1.3; ctx.strokeStyle = stroke; ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.fillStyle = COL.text; ctx.font = "600 12px " + "'IBM Plex Sans', sans-serif";
+    ctx.fillText(title, cxp, cyp - 2);
+    ctx.fillStyle = COL.muted; ctx.font = "10px 'IBM Plex Mono', monospace";
+    ctx.fillText(sub, cxp, cyp + 13);
+  }
+  function edge(ctx, x1, y1, x2, y2, active) {
+    ctx.strokeStyle = active ? "rgba(74,88,105,0.5)" : "rgba(120,134,152,0.22)";
+    ctx.lineWidth = active ? 1.6 : 1.1;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+  function dots(ctx, x1, y1, x2, y2, n, color, ts, rev) {
+    for (var i = 0; i < n; i++) {
+      var p = ((ts * 0.00035 * (speed / 3)) + i / Math.max(n, 1)) % 1;
+      if (rev) p = 1 - p;
+      var x = x1 + (x2 - x1) * p, y = y1 + (y2 - y1) * p;
+      ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 7); ctx.fillStyle = color; ctx.fill();
     }
+  }
+  function drawArch(ts) {
+    var d = fitC(arch, ax, 176), W = d.w;
+    ax.clearRect(0, 0, W, d.h);
+    var nw = Math.max(92, Math.min(130, W * 0.19)), nh = 44, y = 54;
+    var P = {
+      ollama: { x: W * 0.105, y: y }, agents: { x: W * 0.37, y: y },
+      redis: { x: W * 0.64, y: y }, dash: { x: W * 0.885, y: y },
+      targets: { x: W * 0.37, y: 142 }
+    };
+    var work = agents.filter(function (a) { return !a.dead && !a.iso && a.workingOn; });
+    var thinkN = work.filter(function (a) { return phaseOf(a) === "think"; }).length;
+    var verifyN = work.filter(function (a) { return phaseOf(a) === "verify"; }).length;
+    var coordN = coordOK() ? work.length : 0;
+    var gossipMode = !state.redisUp && settings.gossip;
+    var redisDead = !state.redisUp;
+
+    // edges
+    edge(ax, P.ollama.x + nw / 2, y, P.agents.x - nw / 2, y, thinkN > 0);
+    edge(ax, P.agents.x + nw / 2, y, P.redis.x - nw / 2, y, coordN > 0 && !redisDead);
+    edge(ax, P.redis.x + nw / 2, y, P.dash.x - nw / 2, y, !redisDead);
+    edge(ax, P.agents.x, y + nh / 2, P.targets.x, P.targets.y - 20, verifyN > 0);
+
+    // flowing dots
+    if (thinkN) dots(ax, P.ollama.x + nw / 2, y, P.agents.x - nw / 2, y, Math.min(thinkN, 3), COL.amber, ts, false);
+    if (coordN && !redisDead) dots(ax, P.agents.x + nw / 2, y, P.redis.x - nw / 2, y, Math.min(coordN, 3), COL.accent, ts, false);
+    if (!redisDead) dots(ax, P.redis.x + nw / 2, y, P.dash.x - nw / 2, y, 1, COL.dead, ts, false);
+    if (verifyN) dots(ax, P.agents.x, y + nh / 2, P.targets.x, P.targets.y - 20, Math.min(verifyN, 3), COL.red, ts, false);
 
     var c = counts();
-    state.history.push({ t: state.t, red: c.red, amber: c.amber, green: c.green });
-    if (state.history.length > 400) state.history.shift();
+    var tint = function (v, pc) { return "color-mix(in srgb, var(--" + v + ") " + pc + "%, #fff)"; };
+    node(ax, P.ollama.x, y, nw, nh, COL.amber, "Ollama", "writes patch");
+    var aStroke = gossipMode ? COL.amber : COL.accent;
+    node(ax, P.agents.x, y, nw, nh, aStroke, "Agents ×" + agents.filter(function (a) { return !a.dead; }).length,
+         gossipMode ? "gossip mode" : (work.length + " working"));
+    node(ax, P.redis.x, y, nw, nh, redisDead ? COL.red : COL.green, redisDead ? "Redis DOWN" : "Redis blackboard",
+         redisDead ? (settings.gossip ? "bypassed by gossip" : "unreachable") : (c.green + "g · " + c.amber + "a · " + (c.red + c.orph) + "r"));
+    node(ax, P.dash.x, y, nw, nh, COL.dead, "Dashboard", "read-only");
+    node(ax, P.targets.x, P.targets.y, nw, 40, COL.red, "s1 · s2 · s3", "PHP targets");
 
-    if (c.red === 0 && c.amber === 0 && state.wormOut && !state.done) {
-      state.done = true;
-      addLog("patch", "fleet converged · " + c.green + "/" + alive() + " green · t+" + state.t);
-    }
-    updateHUD();
+    // edge captions
+    ax.fillStyle = COL.faint; ax.font = "10px 'IBM Plex Mono', monospace"; ax.textAlign = "center";
+    ax.fillText("patch", (P.ollama.x + nw / 2 + P.agents.x - nw / 2) / 2, y - 9);
+    ax.fillText(redisDead ? (settings.gossip ? "gossip" : "— down —") : "claim · write", (P.agents.x + nw / 2 + P.redis.x - nw / 2) / 2, y - 9);
+    ax.fillText("reads", (P.redis.x + nw / 2 + P.dash.x - nw / 2) / 2, y - 9);
+    ax.textAlign = "left"; ax.fillText("exploit · verify", P.agents.x + 8, (y + nh / 2 + P.targets.y - 20) / 2 + 3);
   }
 
-  function alive() { return state.nodes.filter(function (n) { return !n.dead; }).length; }
-  function counts() {
-    var r = 0, a = 0, g = 0;
-    state.nodes.forEach(function (n) {
-      if (n.dead) return;
-      if (n.st === "red") r++; else if (n.st === "amber") a++; else g++;
-    });
-    return { red: r, amber: a, green: g };
-  }
-
-  function releaseWorm(seedId) {
-    if (!state.wormOut) {
-      state.wormOut = true;
-      addLog("worm", "worm released on " + state.nodes[typeof seedId === "number" ? seedId : state.pz].name);
-    }
-    var id = typeof seedId === "number" ? seedId : state.pz;
-    var nd = state.nodes[id];
-    if (!nd.dead && nd.st === "red") { nd.st = "amber"; nd.prog = 0; }
-    document.getElementById("btnWorm").textContent = "Worm active";
-  }
-
-  function toggleHQ() {
-    state.hq = !state.hq;
-    var b = document.getElementById("btnHQ");
-    if (!state.hq) {
-      b.textContent = "Revive dispatcher"; b.classList.add("active");
-      if (state.killAt === null) state.killAt = { t: state.t, red: counts().red + counts().amber };
-      addLog("hq", "DISPATCHER KILLED at t+" + state.t + " · peer propagation only");
-    } else {
-      b.textContent = "Kill dispatcher"; b.classList.remove("active");
-      addLog("hq", "dispatcher back online at t+" + state.t);
-    }
-    updateHUD();
-  }
-
-  function killServer() {
-    var pool = state.nodes.filter(function (n) { return !n.dead; });
-    if (pool.length <= 2) return;
-    var victim = pool[Math.floor(rnd() * pool.length)];
-    victim.dead = true;
-    addLog("hq", victim.name + " killed · dropped from bridge");
-    updateHUD();
-  }
-
-  function toggleCut() {
-    state.cut = !state.cut;
-    var b = document.getElementById("btnCut");
-    if (state.cut) {
-      state.edges = state.allEdges.filter(function (e) {
-        var la = state.nodes[e[0]].x < 0.5, lb = state.nodes[e[1]].x < 0.5;
-        return la === lb;
+  // ---- render ----
+  function renderBoard() {
+    var el = document.getElementById("board"), html = '<div></div>';
+    VTYPES.forEach(function (v) { html += '<div class="colh">' + v.col + '</div>'; });
+    SERVERS.forEach(function (sid) {
+      html += '<div class="rowh">' + sid + '</div>';
+      VTYPES.forEach(function (v) {
+        var tk = tickets[key(sid, v)], cls = "cell", pill, body = "";
+        if (tk.status === "green") {
+          cls += " green"; pill = '<span class="stp green">clean ✓</span>';
+          body = '<div class="hold">' + (tk.patched_by || "") + '</div>';
+        } else if (tk.status === "orphaned") {
+          cls += " orphaned"; pill = '<span class="stp orph">orphaned</span>';
+          body = '<div class="note red">lease expired — reclaimable</div>';
+        } else if (tk.lock) {
+          cls += " amber"; pill = '<span class="stp amber">patching</span>';
+          var h = agentById(tk.lock.holder), healthy = h && !h.dead && !h.iso;
+          var pctw = Math.max(0, Math.round(tk.lock.lease / TTL * 100));
+          body = '<div class="hold">' + tk.lock.holder + (healthy ? '' : ' — gone') + '</div>'
+               + (tk.cached ? '<div class="note">cached kit</div>' : (tk.attempts ? '<div class="note">' + tk.attempts + ' fail(s)' + (tk.attempts >= 2 ? ', escalated' : '') + '</div>' : ''))
+               + '<div class="lease' + (healthy ? '' : ' gone') + '"><i style="width:' + pctw + '%"></i></div>';
+        } else {
+          cls += " red"; pill = '<span class="stp red">vulnerable</span>';
+          body = '<div class="note">' + (tk.attempts ? tk.attempts + ' fail(s), waiting' : 'unclaimed') + '</div>';
+        }
+        html += '<div class="' + cls + '">' + pill + body + '</div>';
       });
-      b.textContent = "Restore links"; b.classList.add("active");
-      addLog("hq", "bridge partitioned · left/right clusters isolated");
-    } else {
-      state.edges = state.allEdges.slice();
-      b.textContent = "Cut links"; b.classList.remove("active");
-      addLog("hq", "bridge links restored");
-    }
+    });
+    el.innerHTML = html;
   }
 
-  function reset() {
-    buildGraph();
-    document.getElementById("btnWorm").textContent = "Release worm";
-    var bh = document.getElementById("btnHQ"); bh.textContent = "Kill dispatcher"; bh.classList.remove("active");
-    var bc = document.getElementById("btnCut"); bc.textContent = "Cut links"; bc.classList.remove("active");
-    updateHUD();
+  function renderAgents() {
+    var el = document.getElementById("agents");
+    document.getElementById("alivePill").textContent = agents.filter(function (a) { return !a.dead; }).length + " up";
+    el.innerHTML = "";
+    agents.forEach(function (a, i) {
+      var d = document.createElement("div");
+      d.className = "agent" + (a.dead ? " dead" : "") + (a.iso ? " iso" : "");
+      var tag = a.dead ? "offline" : a.iso ? "isolated" : a.workingOn ? phaseOf(a) : "idle";
+      d.innerHTML =
+        '<div class="top"><span class="hb"></span><span class="id">' + a.id + '</span><span class="tag">' + tag + '</span></div>'
+        + '<div class="chips">' + a.spec.map(function (s) { return '<span class="chip">' + s + '</span>'; }).join("") + '</div>'
+        + '<div class="wo">' + (a.workingOn ? "on " + a.workingOn : (a.dead ? "—" : "waiting for a ticket")) + '</div>'
+        + '<div class="btns">'
+        + '<button data-kill="' + i + '"' + (a.dead ? ' disabled' : '') + '>Kill</button>'
+        + '<button class="warn' + (a.iso ? ' on' : '') + '" data-iso="' + i + '"' + (a.dead ? ' disabled' : '') + '>' + (a.iso ? 'Reconnect' : 'Isolate') + '</button>'
+        + '</div>';
+      el.appendChild(d);
+    });
   }
 
-  function updateHUD() {
-    var c = counts(), al = alive();
-    document.getElementById("sRed").textContent = c.red;
+  function renderStatus() {
+    var c = counts();
+    document.getElementById("sRed").textContent = c.red + c.orph;
     document.getElementById("sAmber").textContent = c.amber;
     document.getElementById("sGreen").textContent = c.green;
-    document.getElementById("sKill").textContent = state.killAt ? state.killAt.red : "—";
-    var pct = al ? Math.round(c.green / al * 100) : 0;
-    document.getElementById("pctPill").textContent = pct + "% green";
+    document.getElementById("sTake").textContent = state.takeovers;
+    document.getElementById("pctPill").textContent = Math.round(c.green / TOTAL * 100) + "% clean";
     document.getElementById("clock").textContent = "t+" + String(state.t).padStart(3, "0");
-    document.getElementById("sStall").textContent = state.stalledCount || 0;
+    var board = state.redisUp ? "Redis" : (settings.gossip ? "gossip" : "DOWN");
+    var sb = document.getElementById("sBoard"); sb.textContent = board;
+    sb.className = "v " + (state.redisUp ? "accent" : settings.gossip ? "amber" : "red");
+    document.getElementById("archMode").textContent = state.redisUp ? "stigmergic · no coordinator" : settings.gossip ? "gossip fallback active" : "blackboard down";
 
     var np = document.getElementById("nowPill"), nm = document.getElementById("nowMsg");
     np.className = "phase";
-    if (!state.wormOut) {
-      np.textContent = "at rest";
-      nm.textContent = "All " + al + " servers vulnerable (red). Press “Release worm”, or click a node to seed it there.";
+    var deadA = agents.filter(function (a) { return a.dead; }).map(function (a) { return a.id; });
+    var isoA = agents.filter(function (a) { return a.iso && !a.dead; }).map(function (a) { return a.id; });
+    if (!coordOK()) {
+      np.classList.add("alarm"); np.textContent = "paused";
+      nm.textContent = "Redis is down and gossip fallback is off, so no agent can coordinate. Turn on gossip fallback to keep patching without the blackboard.";
+    } else if (!state.redisUp && settings.gossip) {
+      np.classList.add("run"); np.textContent = "gossip";
+      nm.textContent = "Redis is down — agents are coordinating peer-to-peer via gossip fallback and still making progress. "
+        + c.green + " clean · " + c.amber + " patching · " + (c.red + c.orph) + " vulnerable.";
     } else if (state.done) {
-      np.textContent = "converged"; np.classList.add("done");
-      nm.textContent = "Every reachable server is patched (green) in " + state.t + " ticks"
-        + (state.killAt ? " — and it finished after the dispatcher was killed." : ".");
+      np.classList.add("done"); np.textContent = "converged";
+      nm.textContent = "All " + TOTAL + " vulnerabilities patched and verified"
+        + (state.takeovers ? " — with " + state.takeovers + " lease takeover(s) along the way." : ".");
+    } else if (deadA.length || isoA.length || c.orph) {
+      np.classList.add("alarm"); np.textContent = "takeover";
+      var bits = [];
+      if (deadA.length) bits.push(deadA.join(", ") + " down");
+      if (isoA.length) bits.push(isoA.join(", ") + " isolated");
+      if (c.orph) bits.push(c.orph + " ticket(s) orphaned");
+      nm.textContent = bits.join(" · ") + ". Surviving agents keep patching and take over expired leases.";
     } else {
-      var parts = [c.amber + " cleaning", c.green + " patched"];
-      if (c.red) parts.push(c.red + " still vulnerable");
-      var base = parts.join(" · ");
-      if (!state.hq) {
-        np.textContent = "peer mode"; np.classList.add("peer");
-        nm.textContent = "Dispatcher dead — the cure now spreads server-to-server. " + base + "."
-          + (state.stalledCount ? " " + state.stalledCount + " isolated server(s) waiting for a reachable green neighbour." : "");
-      } else {
-        np.textContent = "worm active"; np.classList.add("worm");
-        nm.textContent = "Worm spreading across the bridge; agents cleaning behind it. " + base + ".";
-      }
+      np.classList.add("run"); np.textContent = "running";
+      nm.textContent = "Agents claim tickets from the blackboard and verify each patch. "
+        + c.green + " clean · " + c.amber + " patching · " + c.red + " vulnerable.";
     }
+  }
 
-    var badge = document.getElementById("hqBadge");
-    badge.innerHTML = '<span class="d"></span>' + (state.hq ? "dispatcher online" : "dispatcher offline");
-    badge.classList.toggle("off", !state.hq);
-    renderLog();
+  function drawChart() {
+    var d = fitC(chart, cx, 190), W = d.w, H = d.h, pad = 26, padT = 10, padB = 18;
+    cx.clearRect(0, 0, W, H);
+    var hist = state.history, maxT = Math.max(20, state.t);
+    function X(t) { return pad + (t / maxT) * (W - pad - 8); }
+    function Y(v) { return padT + (1 - v / TOTAL) * (H - padT - padB); }
+    cx.strokeStyle = "rgba(20,32,46,0.08)"; cx.lineWidth = 1;
+    cx.fillStyle = COL.faint; cx.font = "10px 'IBM Plex Mono', monospace"; cx.textAlign = "right";
+    for (var v = 0; v <= TOTAL; v += 3) { var yy = Y(v); cx.beginPath(); cx.moveTo(pad, yy); cx.lineTo(W - 8, yy); cx.stroke(); cx.fillText(v, pad - 4, yy + 3); }
+    if (hist.length > 1) {
+      cx.beginPath(); cx.moveTo(X(hist[0].t), Y(0));
+      hist.forEach(function (h) { cx.lineTo(X(h.t), Y(h.green)); });
+      cx.lineTo(X(hist[hist.length - 1].t), Y(0)); cx.closePath();
+      cx.fillStyle = "rgba(22,163,74,0.14)"; cx.fill();
+      ln("green", COL.green, 2.2); ln("amber", COL.amber, 1.4); ln("red", COL.red, 1.4);
+    }
+    function ln(kk, color, w) { cx.beginPath(); hist.forEach(function (p, i) { var fx = X(p.t), fy = Y(p[kk]); i ? cx.lineTo(fx, fy) : cx.moveTo(fx, fy); }); cx.strokeStyle = color; cx.lineWidth = w; cx.stroke(); }
+    state.events.forEach(function (e) {
+      var ex = X(e.t);
+      cx.strokeStyle = "rgba(209,52,44,0.5)"; cx.lineWidth = 1; cx.setLineDash([4, 4]);
+      cx.beginPath(); cx.moveTo(ex, padT); cx.lineTo(ex, H - padB); cx.stroke(); cx.setLineDash([]);
+    });
+    if (hist.length) { var last = hist[hist.length - 1]; cx.beginPath(); cx.arc(X(last.t), Y(last.green), 3, 0, 7); cx.fillStyle = COL.green; cx.fill(); }
   }
 
   function renderLog() {
     var el = document.getElementById("log");
-    document.getElementById("logCount").textContent = state.log.length;
+    document.getElementById("logCount").textContent = LOG.length;
     el.innerHTML = "";
-    for (var i = 0; i < Math.min(state.log.length, 60); i++) {
-      var L = state.log[i];
-      var d = document.createElement("div");
-      d.className = "log-line " + L.kind;
-      d.innerHTML = '<span class="ts">t+' + String(L.t).padStart(3, "0") + '</span> ' + esc(L.msg);
-      el.appendChild(d);
+    for (var i = 0; i < Math.min(LOG.length, 70); i++) {
+      var L = LOG[i], dv = document.createElement("div");
+      dv.className = "log-line " + L.kind;
+      dv.innerHTML = '<span class="ts">t+' + String(L.t).padStart(3, "0") + '</span> ' + esc(L.msg);
+      el.appendChild(dv);
     }
   }
   function esc(s) { return s.replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
 
-  function fit(canvas, ctx) {
-    var r = canvas.getBoundingClientRect();
-    var dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.max(1, Math.round(r.width * dpr));
-    canvas.height = Math.max(1, Math.round(r.height * dpr));
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return { w: r.width, h: r.height };
-  }
-
-  function colorFor(nd) {
-    if (nd.dead) return COL.dead;
-    return nd.st === "red" ? COL.red : nd.st === "amber" ? COL.amber : COL.green;
-  }
-
-  function drawGraph(time) {
-    var d = fit(graph, gx);
-    var W = d.w, H = d.h, pad = 34;
-    gx.clearRect(0, 0, W, H);
-    function X(nx) { return pad + nx * (W - pad * 2); }
-    function Y(ny) { return pad + ny * (H - pad * 2); }
-
-    var hubx = W / 2, huby = 14;
-    gx.lineWidth = 1;
-    gx.setLineDash([3, 5]);
-    state.nodes.forEach(function (nd) {
-      if (nd.dead) return;
-      gx.strokeStyle = state.hq
-        ? "rgba(10,79,208," + (nd.st === "amber" ? 0.22 : 0.07) + ")"
-        : "rgba(209,52,44,0.05)";
-      gx.beginPath(); gx.moveTo(hubx, huby); gx.lineTo(X(nd.x), Y(nd.y)); gx.stroke();
-    });
-    gx.setLineDash([]);
-
-    gx.lineWidth = 1.4;
-    state.edges.forEach(function (e) {
-      var a = state.nodes[e[0]], b = state.nodes[e[1]];
-      if (a.dead || b.dead) return;
-      var active = (a.st === "green" || b.st === "green" || a.st === "amber" || b.st === "amber");
-      gx.strokeStyle = active ? "rgba(74,88,105,0.42)" : "rgba(120,134,152,0.26)";
-      gx.beginPath(); gx.moveTo(X(a.x), Y(a.y)); gx.lineTo(X(b.x), Y(b.y)); gx.stroke();
-    });
-
-    state.nodes.forEach(function (nd) {
-      var px = X(nd.x), py = Y(nd.y), col = colorFor(nd);
-      var pulse = nd.st === "amber" ? 0.5 + 0.5 * Math.sin(time / 260 + nd.id) : 0;
-
-      if (!nd.dead && nd.st !== "red") {
-        gx.beginPath(); gx.arc(px, py, 18 + pulse * 3, 0, 7);
-        gx.fillStyle = (nd.st === "green" ? "rgba(22,163,74," : "rgba(242,107,0,") + (0.10 + pulse * 0.08) + ")";
-        gx.fill();
-      }
-      gx.beginPath(); gx.arc(px, py, 12, 0, 7);
-      gx.fillStyle = nd.dead ? "rgba(152,164,180,0.18)" : "#ffffff";
-      gx.fill();
-      gx.lineWidth = 2.4; gx.strokeStyle = col; gx.stroke();
-
-      if (nd.st === "amber" && !nd.dead) {
-        gx.beginPath(); gx.arc(px, py, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * nd.prog);
-        gx.lineWidth = 2.4; gx.strokeStyle = COL.green; gx.stroke();
-      }
-      if (nd.stalled && !nd.dead) {
-        gx.setLineDash([3, 3]);
-        gx.beginPath(); gx.arc(px, py, 16.5, 0, 7);
-        gx.lineWidth = 1.4; gx.strokeStyle = COL.faint; gx.stroke();
-        gx.setLineDash([]);
-        gx.fillStyle = COL.faint; gx.font = "9px 'IBM Plex Mono', monospace"; gx.textAlign = "center";
-        gx.fillText("waiting", px, py - 20);
-      }
-      if (nd.dead) {
-        gx.strokeStyle = COL.dead; gx.lineWidth = 2;
-        gx.beginPath(); gx.moveTo(px - 5, py - 5); gx.lineTo(px + 5, py + 5);
-        gx.moveTo(px + 5, py - 5); gx.lineTo(px - 5, py + 5); gx.stroke();
-      }
-      gx.fillStyle = nd.dead ? COL.faint : COL.muted;
-      gx.font = "11px 'IBM Plex Mono', monospace";
-      gx.textAlign = "center";
-      gx.fillText(nd.name, px, py + 27);
-      if (nd.id === state.pz && !state.wormOut) {
-        gx.fillStyle = COL.red; gx.fillText("patient zero", px, py - 20);
-      }
-    });
-
-    gx.fillStyle = state.hq ? COL.accent : COL.red;
-    gx.strokeStyle = "#ffffff"; gx.lineWidth = 3;
-    gx.beginPath(); gx.rect(hubx - 7, huby - 7, 14, 14); gx.fill(); gx.stroke();
-    gx.fillStyle = COL.faint; gx.font = "10px 'IBM Plex Mono', monospace"; gx.textAlign = "center";
-    gx.fillText("dispatcher", hubx, huby + 24);
-  }
-
-  function drawChart() {
-    var d = fit(chart, cx);
-    var W = d.w, H = d.h, pad = 26, padT = 10, padB = 18;
-    cx.clearRect(0, 0, W, H);
-    var hist = state.history;
-    var maxT = Math.max(20, state.t);
-
-    function X(t) { return pad + (t / maxT) * (W - pad - 8); }
-    function Y(v) { return padT + (1 - v / N) * (H - padT - padB); }
-
-    cx.strokeStyle = "rgba(20,32,46,0.08)"; cx.lineWidth = 1;
-    cx.fillStyle = COL.faint; cx.font = "10px 'IBM Plex Mono', monospace"; cx.textAlign = "right";
-    for (var v = 0; v <= N; v += Math.ceil(N / 3)) {
-      var yy = Y(v);
-      cx.beginPath(); cx.moveTo(pad, yy); cx.lineTo(W - 8, yy); cx.stroke();
-      cx.fillText(v, pad - 4, yy + 3);
-    }
-
-    if (hist.length > 1) {
-      cx.beginPath();
-      cx.moveTo(X(hist[0].t), Y(0));
-      hist.forEach(function (h) { cx.lineTo(X(h.t), Y(h.green)); });
-      cx.lineTo(X(hist[hist.length - 1].t), Y(0)); cx.closePath();
-      cx.fillStyle = "rgba(22,163,74,0.14)"; cx.fill();
-
-      line(hist, "green", COL.green, 2.2);
-      line(hist, "amber", COL.amber, 1.4);
-      line(hist, "red", COL.red, 1.4);
-    }
-
-    function line(h, key, color, w) {
-      cx.beginPath();
-      h.forEach(function (p, i) { var fx = X(p.t), fy = Y(p[key]); i ? cx.lineTo(fx, fy) : cx.moveTo(fx, fy); });
-      cx.strokeStyle = color; cx.lineWidth = w; cx.stroke();
-    }
-
-    if (state.killAt) {
-      var kx = X(state.killAt.t);
-      cx.strokeStyle = "rgba(209,52,44,0.7)"; cx.lineWidth = 1; cx.setLineDash([4, 4]);
-      cx.beginPath(); cx.moveTo(kx, padT); cx.lineTo(kx, H - padB); cx.stroke(); cx.setLineDash([]);
-      cx.fillStyle = COL.red; cx.textAlign = "left"; cx.font = "10px 'IBM Plex Mono', monospace";
-      cx.fillText("HQ killed", Math.min(kx + 4, W - 60), padT + 9);
-    }
-    if (hist.length) {
-      var lastH = hist[hist.length - 1];
-      cx.beginPath(); cx.arc(X(lastH.t), Y(lastH.green), 3, 0, 7); cx.fillStyle = COL.green; cx.fill();
-    }
-  }
+  function renderAll() { renderBoard(); renderAgents(); renderStatus(); drawChart(); renderLog(); }
 
   function frame(ts) {
-    if (!last) last = ts;
-    var dt = (ts - last) / 1000; last = ts;
-    if (running) {
-      acc += dt;
-      var interval = stepEvery * (3 / speed);
-      while (acc >= interval) { tick(); acc -= interval; }
-    }
-    drawGraph(ts);
-    drawChart();
+    if (!lastTs) lastTs = ts;
+    var dt = (ts - lastTs) / 1000; lastTs = ts;
+    if (running) { acc += dt; var iv = stepEvery * (3 / speed); while (acc >= iv) { tick(); acc -= iv; } }
+    drawArch(ts);
+    if (!running) drawChart();
     requestAnimationFrame(frame);
   }
 
-  // ---- hook for real backends (replace the simulation) ----
-  // function pollServers() { fetch('/api/fleet').then(r=>r.json()).then(applyFleet); }
-  // function applyFleet(data){ /* map {name,state} onto state.nodes, then updateHUD(); */ }
+  // ---- hook for real backends ----
+  // function pollServers() { fetch('/api/state').then(r=>r.json()).then(applyState); }
+  // function applyState(d){ /* map d.tickets + d.agents onto tickets/agents, then renderAll(); */ }
 
-  document.getElementById("btnWorm").addEventListener("click", function () { releaseWorm(); });
-  document.getElementById("btnHQ").addEventListener("click", toggleHQ);
-  document.getElementById("btnKill").addEventListener("click", killServer);
-  document.getElementById("btnCut").addEventListener("click", toggleCut);
+  document.getElementById("btnKill").addEventListener("click", killWorking);
+  document.getElementById("btnRedis").addEventListener("click", function () { toggleRedis(); renderAll(); });
   document.getElementById("btnReset").addEventListener("click", reset);
-  document.getElementById("btnPlay").addEventListener("click", function () {
-    running = !running; this.textContent = running ? "Pause" : "Play";
-  });
+  document.getElementById("btnGossip").addEventListener("click", function () { toggleGossip(); renderAll(); });
+  document.getElementById("btnRescan").addEventListener("click", function () { toggleRescan(); renderAll(); });
+  document.getElementById("btnPlay").addEventListener("click", function () { running = !running; this.textContent = running ? "Pause" : "Play"; });
   document.getElementById("speed").addEventListener("input", function () { speed = +this.value; });
-
-  graph.addEventListener("click", function (ev) {
-    var r = graph.getBoundingClientRect(), pad = 34;
-    var mx = ev.clientX - r.left, my = ev.clientY - r.top;
-    var W = r.width, H = r.height;
-    for (var i = 0; i < state.nodes.length; i++) {
-      var nd = state.nodes[i];
-      var px = pad + nd.x * (W - pad * 2), py = pad + nd.y * (H - pad * 2);
-      if ((mx - px) * (mx - px) + (my - py) * (my - py) < 260 && !nd.dead) { releaseWorm(i); break; }
-    }
+  document.getElementById("agents").addEventListener("click", function (ev) {
+    var kB = ev.target.closest("[data-kill]"), iB = ev.target.closest("[data-iso]");
+    if (kB) killAgent(agents[+kB.getAttribute("data-kill")]);
+    else if (iB) toggleIso(agents[+iB.getAttribute("data-iso")]);
+    renderAll();
   });
-
-  window.addEventListener("resize", function () { refreshColors(); });
+  window.addEventListener("resize", refreshColors);
 
   refreshColors();
-  buildGraph();
-  updateHUD();
+  build();
+  renderAll();
   requestAnimationFrame(frame);
 })();
 </script>
