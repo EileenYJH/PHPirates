@@ -1,5 +1,3 @@
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PHPatch</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
@@ -111,12 +109,6 @@
   .speedrow { display: flex; align-items: center; gap: 10px; padding-top: 2px; }
   .speedrow label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
   input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); min-height: 32px; }
-  .speedrow label.wide { flex: none; width: 82px; }
-  .speedrow output { font-family: var(--mono); font-size: 11px; color: var(--text); flex: none; min-width: 26px; text-align: right; }
-  .hint { margin: 0 2px; font-size: 11px; color: var(--faint); line-height: 1.4; }
-  .cell.killable, .hcell.killable { cursor: crosshair; }
-  .cell.killable:hover { border-color: var(--red); box-shadow: 0 0 0 2px color-mix(in srgb, var(--red) 18%, transparent); }
-  .hcell.killable:hover { outline: 2px solid var(--red); }
 
   .agents { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
   .agent { display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; }
@@ -161,99 +153,6 @@
   .log-line.sys { color: var(--faint); }
   .foot { color: var(--faint); font-size: 11px; font-family: var(--mono); text-align: center; padding-top: 2px; }
   .foot code { background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
-
-  /* ---- polish pass: readable sizes, KPI strip, sticky control rail ---- */
-  body { font-size: 15px; }
-  .tagline { font-size: 13px; }
-  .now { padding: 12px 16px; }
-  .now .msg { font-size: 15px; line-height: 1.45; }
-  .now .phase { font-size: 12px; }
-  .pill { font-size: 12px; }
-  .card-h .t { font-size: 12.5px; }
-  .card-h .sub { font-size: 12.5px; color: var(--faint); }
-  .clegend span { font-size: 12px; }
-  .archcap { font-size: 13.5px; }
-
-  .kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
-  .kpi { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; border-top: 3px solid var(--line2); min-width: 0; }
-  .kpi .k { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .kpi .v { font-family: var(--mono); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; display: flex; align-items: baseline; gap: 8px; }
-  .kpi .v small { font-size: 13px; font-weight: 500; color: var(--muted); }
-  .kpi.red { border-top-color: var(--red); } .kpi.red .v { color: var(--red); }
-  .kpi.amber { border-top-color: var(--amber); } .kpi.amber .v { color: var(--amber-soft); }
-  .kpi.green { border-top-color: var(--green); } .kpi.green .v { color: var(--green); }
-  .kpi.accent { border-top-color: var(--accent); } .kpi.accent .v { color: var(--accent); }
-  .kpi .v.amber { color: var(--amber-soft); } .kpi .v.red { color: var(--red); } .kpi .v.accent { color: var(--accent); }
-  @media (max-width: 1000px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-  @media (max-width: 520px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .kpi .v { font-size: 20px; } }
-
-  .grid { grid-template-columns: minmax(0, 1fr) 320px; }
-  .main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .bottom { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
-  @media (min-width: 861px) {
-    .rail { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
-  }
-  @media (max-width: 1100px) { .bottom { grid-template-columns: minmax(0, 1fr); } }
-
-  .controls { padding: 12px 14px; gap: 10px; }
-  .controls button { min-height: 40px; font-size: 14px; white-space: nowrap; }
-  .row > button { flex: 1; min-width: 0; }
-  .demos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .demos button { min-height: 44px; font-size: 13.5px; white-space: normal; line-height: 1.25; padding: 4px 10px; }
-  .demos .span2 { grid-column: span 2; }
-  .hint { font-size: 12.5px; margin: 0; }
-  .speedrow label, .speedrow label.wide { font-size: 12px; width: 82px; flex: none; }
-  .speedrow output { font-size: 13px; min-width: 30px; }
-
-  .board { gap: 10px; padding: 14px; }
-  .colh { font-size: 13px; }
-  .rowh { font-size: 14px; font-weight: 600; }
-  .cell { min-height: 92px; padding: 10px 11px; }
-  .stp { font-size: 11.5px; padding: 2px 8px; }
-  .cell .hold { font-size: 13px; }
-  .cell .note { font-size: 12px; }
-  .lease { height: 6px; }
-
-  .agents { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; padding: 12px; }
-  .agent .id { font-size: 13.5px; }
-  .agent .tag { font-size: 12px; }
-  .chip { font-size: 11px; padding: 1px 6px; }
-  .agent .wo { font-size: 12.5px; }
-  .agent .btns button { min-height: 32px; font-size: 13px; }
-
-  .log-body { height: 230px; font-size: 12.5px; line-height: 1.6; }
-  .log-line { white-space: normal; overflow: visible; text-overflow: clip; text-indent: -3.4em; padding-left: 3.4em; }
-  #chart { height: 230px; }
-
-  .roadmap-card .roadmap { flex-direction: row; flex-wrap: wrap; gap: 10px 22px; }
-  .ri { font-size: 13.5px; }
-  .ri .b { font-size: 10.5px; }
-  .foot { font-size: 12px; }
-
-  /* compact rail so every control fits on a laptop screen */
-  .rail { gap: 10px; }
-  .rail .card-h { padding: 8px 14px; }
-  .rail .controls { padding: 10px 12px; gap: 8px; }
-  .rail .controls button { min-height: 36px; }
-  .rail .demos button { min-height: 38px; }
-  .rail input[type=range] { min-height: 26px; }
-  .speedrow { padding-top: 0; }
-  .speedrow label, .speedrow label.wide { white-space: nowrap; width: 92px; }
-
-  @media (max-width: 860px) {
-    .grid { grid-template-columns: minmax(0, 1fr); }
-    .now { flex-wrap: wrap; }
-  }
-
-  @media (max-width: 520px) {
-    .board { grid-template-columns: 30px repeat(3, minmax(0, 1fr)); gap: 6px; padding: 10px 8px; }
-    .cell { padding: 7px 6px; min-height: 84px; }
-    .stp { font-size: 10px; padding: 1px 5px; letter-spacing: 0; max-width: 100%; }
-    .cell .hold { font-size: 12px; overflow-wrap: anywhere; }
-    .cell .note { font-size: 11px; }
-    .colh { font-size: 12px; }
-    .rowh { font-size: 13px; }
-  }
 </style>
 
 <div class="app">
@@ -281,129 +180,95 @@
     <span class="msg" id="nowMsg">Agents are claiming tickets from the blackboard.</span>
   </div>
 
-  <div class="kpis" aria-label="Fleet status">
-    <div class="kpi red"><span class="k">Vulnerable</span><span class="v" id="sRed">9</span></div>
-    <div class="kpi amber"><span class="k">Patching</span><span class="v" id="sAmber">0</span></div>
-    <div class="kpi green"><span class="k">Clean (verified)</span><span class="v"><span id="sGreen">0</span><small id="pctPill">0%</small></span></div>
-    <div class="kpi accent"><span class="k">Lease takeovers</span><span class="v" id="sTake">0</span></div>
-    <div class="kpi"><span class="k">Agents up</span><span class="v" id="alivePill">4</span></div>
-    <div class="kpi"><span class="k">Blackboard</span><span class="v accent" id="sBoard">Redis</span></div>
+  <div class="card">
+    <div class="card-h"><span class="t">How it works — live</span><span class="clegend"><span><i style="background:var(--accent)"></i>coordinate</span><span><i style="background:var(--amber)"></i>patch</span><span><i style="background:var(--red)"></i>verify</span></span><span class="pill mono" id="archMode">stigmergic</span></div>
+    <div class="arch-body">
+      <p class="archcap">No agent talks to another. Each one reads and writes <b>one shared board</b> (Redis) — take a ticket, hold a lease, post the fix. That shared board is the only way they coordinate, so losing an agent loses nothing.</p>
+      <canvas id="arch"></canvas>
+    </div>
   </div>
 
   <div class="grid">
-    <div class="main">
-      <div class="card">
-        <div class="card-h"><span class="t">How it works — live</span><span class="clegend"><span><i style="background:var(--accent)"></i>coordinate</span><span><i style="background:var(--amber)"></i>patch</span><span><i style="background:var(--red)"></i>verify</span></span><span class="pill mono" id="archMode">stigmergic</span></div>
-        <div class="arch-body">
-          <p class="archcap">No agent talks to another. Each one reads and writes <b>one shared board</b> (Redis): take a ticket, hold a lease, post the fix. That board is the only way they coordinate, so losing an agent loses nothing.</p>
-          <canvas id="arch"></canvas>
-        </div>
+    <div class="card">
+      <div class="card-h">
+        <span class="t">The shared board — one ticket per bug</span>
+        <span class="clegend">
+          <span><i style="background:var(--red)"></i>vulnerable</span>
+          <span><i style="background:var(--amber)"></i>patching</span>
+          <span><i class="orph"></i>orphaned</span>
+          <span><i style="background:var(--green)"></i>clean</span>
+        </span>
       </div>
-
-      <div class="card">
-        <div class="card-h">
-          <span class="t">The shared board — one ticket per bug</span>
-          <span class="clegend">
-            <span><i style="background:var(--red)"></i>vulnerable</span>
-            <span><i style="background:var(--amber)"></i>patching</span>
-            <span><i class="orph"></i>orphaned</span>
-            <span><i style="background:var(--green)"></i>clean</span>
-          </span>
-        </div>
-        <div class="board" id="board"></div>
-      </div>
-
-      <div class="card">
-        <div class="card-h"><span class="t">Agents</span><span class="sub">Kill or isolate any agent to watch the others cover for it</span></div>
-        <div class="agents" id="agents"></div>
-      </div>
-
-      <div class="bottom">
-        <div class="card">
-          <div class="card-h"><span class="t">Tickets clean over time</span><span class="clegend"><span><i style="background:var(--green)"></i>clean</span><span><i style="background:var(--amber)"></i>patching</span><span><i style="background:var(--red)"></i>vulnerable</span></span></div>
-          <canvas id="chart"></canvas>
-        </div>
-        <div class="card">
-          <div class="card-h"><span class="t">Swarm log</span><span class="pill mono" id="logCount">0</span></div>
-          <div class="log-body" id="log"></div>
-        </div>
-      </div>
+      <div class="board" id="board"></div>
     </div>
 
-    <aside class="rail" aria-label="Controls">
+    <div class="rail">
       <div class="card">
         <div class="card-h"><span class="t">Guided demos</span></div>
         <div class="controls">
-          <p class="hint">Each restarts the sim, then triggers one feature on cue.</p>
-          <div class="demos">
-            <button id="scLease">Lease takeover</button>
-            <button id="scPart">Network partition</button>
-            <button id="scGossip">Redis down &rarr; gossip</button>
-            <button id="scRescan">Re-scan catch</button>
-            <button id="scCache" class="span2">Cached patch</button>
-          </div>
+          <button id="scLease">Demo: lease takeover</button>
+          <button id="scGossip">Demo: Redis down &rarr; gossip</button>
+          <button id="scPart">Demo: network partition</button>
+          <button id="scRescan">Demo: re-scan catch</button>
+          <button id="scCache">Demo: cached patch</button>
+          <p style="margin:4px 2px 0;font-size:11px;color:var(--faint);line-height:1.4">Each resets, gets the swarm busy, then triggers one feature so you can watch it happen.</p>
+        </div>
+      </div>
+      <div class="card controls">
+        <div class="row"><button class="danger" id="btnKill">Kill a working agent</button></div>
+        <div class="row">
+          <button class="danger" id="btnRedis">Kill Redis</button>
+          <button id="btnReset">Reset</button>
+        </div>
+        <div class="row">
+          <button class="warn" id="btnGossip">Gossip fallback</button>
+          <button class="warn" id="btnRescan">Re-scan</button>
+        </div>
+        <div class="row"><button class="warn" id="btnScale">Scale: 3 servers</button></div>
+        <div class="speedrow">
+          <button id="btnPlay" style="flex:none;min-width:80px">Pause</button>
+          <label for="speed">Speed</label>
+          <input type="range" id="speed" min="1" max="6" value="3" aria-label="Simulation speed">
         </div>
       </div>
 
       <div class="card">
-        <div class="card-h"><span class="t">Lease takeover</span><span class="pill mono" id="leasePill">0 held</span></div>
-        <div class="controls">
-          <div class="speedrow">
-            <label class="wide" for="ttl">Lease TTL</label>
-            <input type="range" id="ttl" min="2" max="15" value="6" aria-label="Lease TTL in ticks">
-            <output id="ttlOut" for="ttl">6</output>
-          </div>
-          <div class="speedrow">
-            <label class="wide" for="wdelay">Work delay</label>
-            <input type="range" id="wdelay" min="0" max="10" value="0" aria-label="Extra ticks an agent holds the lease">
-            <output id="wdelayOut" for="wdelay">+0</output>
-          </div>
-          <div class="row">
-            <button class="danger" id="btnKillHolder">Kill holder</button>
-            <button id="btnRevive" disabled>Revive dead</button>
-          </div>
-          <p class="hint">Tip: click a <b>patching</b> ticket on the board to kill its holder.</p>
+        <div class="card-h"><span class="t">Agents</span><span class="pill mono" id="alivePill">4 up</span></div>
+        <div class="agents" id="agents"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><span class="t">Status</span><span class="pill mono" id="pctPill">0% clean</span></div>
+        <div>
+          <div class="stat"><span class="k">Blackboard</span><span class="v accent" id="sBoard">Redis</span></div>
+          <div class="stat"><span class="k">Vulnerable</span><span class="v red" id="sRed">9</span></div>
+          <div class="stat"><span class="k">Patching</span><span class="v amber" id="sAmber">0</span></div>
+          <div class="stat"><span class="k">Clean (verified)</span><span class="v green" id="sGreen">0</span></div>
+          <div class="stat"><span class="k">Lease takeovers</span><span class="v accent" id="sTake">0</span></div>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-h"><span class="t">Chaos &amp; simulation</span></div>
-        <div class="controls">
-          <div class="row">
-            <button class="danger" id="btnRedis">Kill Redis</button>
-            <button class="warn" id="btnGossip">Gossip fallback</button>
-          </div>
-          <div class="row">
-            <button class="warn" id="btnRescan">Re-scan</button>
-            <button class="warn" id="btnScale">Scale: 3 servers</button>
-          </div>
-          <div class="speedrow">
-            <label class="wide" for="nAgents">Agents</label>
-            <input type="range" id="nAgents" min="1" max="12" value="4" aria-label="Number of agents in the swarm">
-            <output id="nAgentsOut" for="nAgents">4</output>
-          </div>
-          <div class="speedrow">
-            <label class="wide" for="speed">Speed</label>
-            <input type="range" id="speed" min="1" max="6" value="3" aria-label="Simulation speed">
-            <output id="speedOut" for="speed">3&times;</output>
-          </div>
-          <div class="row">
-            <button id="btnPlay">Pause</button>
-            <button id="btnReset">Reset</button>
-          </div>
+        <div class="card-h"><span class="t">Hardening roadmap</span></div>
+        <div class="roadmap">
+          <div class="ri"><span class="b live">LIVE</span><span>Gossip fallback if Redis drops</span></div>
+          <div class="ri"><span class="b live">LIVE</span><span>Patch-kit cache (skip the model)</span></div>
+          <div class="ri"><span class="b live">LIVE</span><span>Periodic re-scan (catch regressions)</span></div>
+          <div class="ri"><span class="b plan">PLAN</span><span>Second-agent confirm before trust</span></div>
+          <div class="ri"><span class="b plan">PLAN</span><span>Signed patches (anti-rogue-agent)</span></div>
         </div>
       </div>
-    </aside>
+    </div>
   </div>
 
-  <div class="card roadmap-card">
-    <div class="card-h"><span class="t">Hardening roadmap</span></div>
-    <div class="roadmap">
-      <div class="ri"><span class="b live">LIVE</span><span>Gossip fallback if Redis drops</span></div>
-      <div class="ri"><span class="b live">LIVE</span><span>Patch-kit cache (skip the model)</span></div>
-      <div class="ri"><span class="b live">LIVE</span><span>Periodic re-scan (catch regressions)</span></div>
-      <div class="ri"><span class="b plan">PLAN</span><span>Second-agent confirm before trust</span></div>
-      <div class="ri"><span class="b plan">PLAN</span><span>Signed patches (anti-rogue-agent)</span></div>
+  <div class="bottom">
+    <div class="card">
+      <div class="card-h"><span class="t">Tickets clean over time</span><span class="clegend"><span><i style="background:var(--green)"></i>clean</span><span><i style="background:var(--amber)"></i>patching</span><span><i style="background:var(--red)"></i>vulnerable</span></span></div>
+      <canvas id="chart"></canvas>
+    </div>
+    <div class="card">
+      <div class="card-h"><span class="t">Swarm log</span><span class="pill mono" id="logCount">0</span></div>
+      <div class="log-body" id="log"></div>
     </div>
   </div>
 
@@ -422,12 +287,10 @@
     { id: "upload-share", type: "fileupload", col: "Upload · share" }
   ];
   var AGENT_DEFS = [];
-  var AGENT_COUNT = 4;   // set by the Agents slider; 4 by default, 12 in scale mode
   var TOTAL = 9;
   var TTL = 6;
   var SUCCESS = 0.70, SUCCESS_ESC = 0.96, SUCCESS_CACHE = 0.95;
   var COOLDOWN = 3;
-  var WORK_DELAY = 0;
 
   var tickets = {}, agents = [], order = [];
   var state = {};
@@ -444,14 +307,6 @@
       .forEach(function (k) { COL[k] = css("--" + k); });
   }
 
-  // canvas cannot parse CSS color-mix(); blend a hex colour toward white instead
-  function tint(hex, p) {
-    var v = parseInt(String(hex).replace('#', ''), 16);
-    if (isNaN(v)) return '#ffffff';
-    var m = function (c) { return Math.round(255 + (c - 255) * p); };
-    return 'rgb(' + m(v >> 16 & 255) + ',' + m(v >> 8 & 255) + ',' + m(v & 255) + ')';
-  }
-
   function rint(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
   function key(sid, v) { return sid + ":" + v.id; }
   function coordOK() { return state.redisUp || settings.gossip; }
@@ -462,6 +317,7 @@
       SERVERS = [];
       for (var n = 1; n <= 24; n++) SERVERS.push("s" + (n < 10 ? "0" : "") + n);
       AGENT_DEFS = [];
+      for (var j = 0; j < 12; j++) AGENT_DEFS.push({ id: "agent-" + String.fromCharCode(97 + j), spec: [TYPES[j % 3], TYPES[(j + 1) % 3]] });
     } else {
       SERVERS = ["s1", "s2", "s3"];
       AGENT_DEFS = [
@@ -469,14 +325,8 @@
         { id: "agent-b", spec: ["xss", "fileupload"] },
         { id: "agent-c", spec: ["fileupload", "sqli"] },
         { id: "agent-d", spec: ["sqli", "xss", "fileupload"] }
-      ].slice(0, AGENT_COUNT);
+      ];
     }
-    // Extra agents rotate through two-type specialisms. From 3 agents up every bug type has
-    // at least two specialists, so any single death can be taken over.
-    for (var j = AGENT_DEFS.length; j < AGENT_COUNT; j++)
-      AGENT_DEFS.push({ id: "agent-" + String.fromCharCode(97 + j), spec: [TYPES[j % 3], TYPES[(j + 1) % 3]] });
-    // With 1-2 agents that guarantee breaks, so they all become generalists.
-    if (AGENT_COUNT <= 2) AGENT_DEFS.forEach(function (d) { d.spec = TYPES.slice(); });
     TOTAL = SERVERS.length * VTYPES.length;
     tickets = {}; order = [];
     SERVERS.forEach(function (sid) {
@@ -551,7 +401,7 @@
     var cached = !!state.kit[tk.type] && tk.attempts === 0;
     tk.lock = { holder: agent.id, lease: TTL };
     tk.status = "amber"; tk.claimed_by = agent.id; tk.cached = cached;
-    agent.workingOn = k; agent.workLeft = (cached ? rint(2, 3) : rint(3, 6)) + WORK_DELAY;
+    agent.workingOn = k; agent.workLeft = cached ? rint(2, 3) : rint(3, 6);
     if (takeover) { state.takeovers++; addLog("takeover", agent.id + " TAKEOVER of " + k + " from dead " + prev); }
     else addLog("claim", agent.id + " claimed " + k + (cached ? " · cached kit" : " (" + tk.type + ")"));
   }
@@ -635,48 +485,6 @@
     state.events.push({ t: state.t });
     addLog("takeover", a.id + " KILLED" + (a.workingOn ? " mid-patch on " + a.workingOn + " — its lease will expire" : ""));
   }
-  // ---- lease takeover controls ----
-  function healthyHolder(k) {
-    var tk = tickets[k];
-    if (!tk || !tk.lock) return null;
-    var h = agentById(tk.lock.holder);
-    return h && !h.dead && !h.iso ? h : null;
-  }
-  function killHolderOf(k) {
-    var h = healthyHolder(k);
-    if (!h) return;
-    addLog("sys", "killing " + h.id + ", which holds the lease on " + k);
-    killAgent(h);
-  }
-  function killAnyHolder() {
-    var held = order.filter(function (k) { return healthyHolder(k); });
-    if (held.length) killHolderOf(held[rint(0, held.length - 1)]);
-    else addLog("sys", "no agent is holding a lease right now");
-  }
-  function reviveDead() {
-    agents.forEach(function (a) {
-      if (!a.dead) return;
-      a.dead = false; a.workingOn = null; a.workLeft = 0;
-      addLog("sys", a.id + " restarted — fresh process, no lease, back to claiming");
-    });
-    state.done = counts().green === TOTAL;
-  }
-  function setTTL(v) {
-    TTL = v;
-    order.forEach(function (k) { var l = tickets[k] && tickets[k].lock; if (l && l.lease > TTL) l.lease = TTL; });
-    document.getElementById("ttlOut").textContent = v;
-  }
-  function setWorkDelay(v) {
-    WORK_DELAY = v;
-    document.getElementById("wdelayOut").textContent = "+" + v;
-  }
-  function renderLease() {
-    var held = order.filter(function (k) { return healthyHolder(k); }).length;
-    document.getElementById("leasePill").textContent = held + " held";
-    document.getElementById("btnKillHolder").disabled = !held;
-    document.getElementById("btnRevive").disabled = !agents.some(function (a) { return a.dead; });
-  }
-
   function toggleIso(a) { a.iso = !a.iso; addLog("sys", a.id + (a.iso ? " isolated from the blackboard" : " reconnected")); }
   function toggleRedis() {
     state.redisUp = !state.redisUp;
@@ -717,9 +525,7 @@
     var steps = [];
     if (name === "lease") {
       steps = [{ at: 6, fn: function () { addLog("sys", "SCENARIO: killing the agent that holds a ticket"); killWorking(); } }];
-      state.scenarioMsg = agents.length > 1
-        ? "Lease takeover — an agent dies mid-patch; watch its lease bar drain, the ticket go orphaned, then another agent TAKEOVER."
-        : "Lease takeover with one agent — it dies mid-patch and nobody is left to take over, so the ticket stays orphaned. Press Revive dead to recover.";
+      state.scenarioMsg = "Lease takeover — an agent dies mid-patch; watch its lease bar drain, the ticket go orphaned, then another agent TAKEOVER.";
     } else if (name === "gossip") {
       steps = [
         { at: 5, fn: function () { addLog("sys", "SCENARIO: Redis goes down, gossip off — swarm pauses"); if (state.redisUp) toggleRedis(); } },
@@ -784,17 +590,17 @@
     }
   }
   function drawArch(ts) {
-    var d = fitC(arch, ax, 280), W = d.w, H = d.h;
+    var d = fitC(arch, ax, 230), W = d.w, H = d.h;
     ax.clearRect(0, 0, W, H);
-    var cxC = W * 0.46, cyC = 132;
-    var Ra = Math.max(64, Math.min(scaleMode ? 104 : 92, W * (scaleMode ? 0.18 : 0.15)));
+    var cxC = W * 0.44, cyC = 100;
+    var Ra = Math.max(60, Math.min(scaleMode ? 112 : 92, W * (scaleMode ? 0.18 : 0.14)));
     var redisDead = !state.redisUp, gossipMode = redisDead && settings.gossip;
     var O = { x: Math.max(48, W * 0.10), y: cyC };
-    var D = { x: O.x, y: H - 52 };
+    var D = { x: cxC, y: H - 30 };
     var T = scaleMode ? [ { x: W * 0.84, y: cyC } ]
-                      : [ { x: W * 0.84, y: cyC - 52 }, { x: W * 0.87, y: cyC }, { x: W * 0.84, y: cyC + 52 } ];
-    var NA = agents.length, A = [];
-    for (var i = 0; i < NA; i++) { var th = (-90 + i * 360 / NA) * Math.PI / 180; A.push({ x: cxC + Ra * Math.cos(th), y: cyC + Ra * Math.sin(th) }); }
+                      : [ { x: W * 0.80, y: cyC - 44 }, { x: W * 0.845, y: cyC }, { x: W * 0.80, y: cyC + 44 } ];
+    var NA = agents.length, Rx = Ra, Ry = Math.min(Ra, 72), A = [];
+    for (var i = 0; i < NA; i++) { var th = (-90 + i * 360 / NA) * Math.PI / 180; A.push({ x: cxC + Rx * Math.cos(th), y: cyC + Ry * Math.sin(th) }); }
 
     var work = agents.filter(function (a) { return !a.dead && !a.iso && a.workingOn; });
     var thinkN = work.filter(function (a) { return phaseOf(a) === "think"; }).length;
@@ -838,23 +644,23 @@
 
     var c = counts();
     // outer nodes
-    circ(O.x, O.y, 15, COL.amber, tint(COL["amber"], 0.08));
-    if (W < 560) lab(O.x, O.y + 32, "Ollama", COL["amber-soft"], 11); else lab(O.x, O.y - 24, "Ollama (LLM)", COL["amber-soft"], 12);
-    lab(O.x, O.y + 4, "AI", COL["amber-soft"], 11);
+    circ(O.x, O.y, 15, COL.amber, "color-mix(in srgb,var(--amber) 8%,#fff)");
+    lab(O.x, O.y - 21, "Ollama", COL["amber-soft"], 10);
+    lab(O.x, O.y + 4, "AI", COL["amber-soft"], 10);
     if (scaleMode) {
-      circ(T[0].x, T[0].y, 15, COL.red, tint(COL["red"], 0.07));
-      lab(T[0].x + 22, T[0].y - 4, SERVERS.length + " servers", COL.muted, 12, "left");
-      lab(T[0].x + 22, T[0].y + 12, "PHP targets", COL.faint, 11, "left");
+      circ(T[0].x, T[0].y, 15, COL.red, "color-mix(in srgb,var(--red) 7%,#fff)");
+      lab(T[0].x, T[0].y - 24, "targets", COL.faint, 9);
+      lab(T[0].x, T[0].y + 28, SERVERS.length + " servers", COL.muted, 9);
     } else {
-      lab(T[0].x, T[0].y - 22, "PHP servers", COL.faint, 11);
-      T.forEach(function (t, i) { circ(t.x, t.y, 12, COL.red, tint(COL["red"], 0.07)); lab(t.x + 19, t.y + 4, SERVERS[i], COL.muted, 12, "left"); });
+      lab(T[0].x + 17, T[0].y - 14, "targets", COL.faint, 9, "left");
+      T.forEach(function (t, i) { circ(t.x, t.y, 12, COL.red, "color-mix(in srgb,var(--red) 7%,#fff)"); lab(t.x + 18, t.y + 3, SERVERS[i], COL.muted, 10, "left"); });
     }
-    circ(D.x, D.y, 13, COL.dead, tint(COL["dead"], 0.12));
-    lab(D.x, D.y + 28, "Dashboard", COL.muted, 12);
+    circ(D.x, D.y, 13, COL.dead, "color-mix(in srgb,var(--dead) 12%,#fff)");
+    lab(D.x, D.y + 26, "Dashboard", COL.muted, 10);
 
     // agents ring
     var pulse = 0.5 + 0.5 * Math.sin(ts / 260);
-    var ar = NA > 8 ? 11 : NA > 6 ? 14 : 18, showLab = NA <= 8;
+    var ar = NA > 6 ? 10 : 17, showLab = NA <= 6;
     A.forEach(function (p, i) {
       var a = agents[i], letter = a.id.replace("agent-", "").toUpperCase();
       if (a.dead || a.iso) {
@@ -866,22 +672,23 @@
         ax.restore();
       }
       var stroke = a.dead ? COL.red : a.iso ? COL.amber : a.workingOn ? COL.accent : COL.muted;
-      circ(p.x, p.y, ar, stroke, a.dead ? tint(COL["red"], 0.1) : "#ffffff");
+      circ(p.x, p.y, ar, stroke, a.dead ? "color-mix(in srgb,var(--red) 10%,#fff)" : "#ffffff");
       var xr = ar > 12 ? 6 : 4;
       if (a.dead) { ax.strokeStyle = COL.red; ax.lineWidth = 2.2; ax.beginPath(); ax.moveTo(p.x - xr, p.y - xr); ax.lineTo(p.x + xr, p.y + xr); ax.moveTo(p.x + xr, p.y - xr); ax.lineTo(p.x - xr, p.y + xr); ax.stroke(); }
-      else if (showLab) { lab(p.x, p.y + 5, letter, a.workingOn ? COL.accent : COL.muted, 13); }
+      else if (showLab) { lab(p.x, p.y + 4, letter, a.workingOn ? COL.accent : COL.muted, 12); }
       if (showLab) {
-        lab(p.x, (p.y > cyC ? p.y + ar + 14 : p.y - ar - 8), "agent-" + letter.toLowerCase() + (a.dead ? " DOWN" : a.iso ? " ISO" : ""), a.dead ? COL.red : a.iso ? COL["amber-soft"] : COL.muted, 11);
+        lab(p.x, (p.y > cyC ? p.y + ar + 14 : p.y - ar - 8), "agent-" + letter.toLowerCase() + (a.dead ? " DOWN" : a.iso ? " ISO" : ""), a.dead ? COL.red : a.iso ? COL["amber-soft"] : COL.faint, a.dead || a.iso ? 10 : 9);
       } else if (a.dead || a.iso) {
-        lab(p.x, (p.y > cyC ? p.y + ar + 13 : p.y - ar - 6), letter, a.dead ? COL.red : COL["amber-soft"], 11);
+        lab(p.x, (p.y > cyC ? p.y + ar + 12 : p.y - ar - 6), letter, a.dead ? COL.red : COL["amber-soft"], 9);
       }
     });
 
     // central shared board (hub)
-    circ(cxC, cyC, 30, redisDead ? COL.red : COL.green,
-         redisDead ? tint(COL["red"], 0.09) : tint(COL["green"], 0.09));
-    lab(cxC, cyC - 1, redisDead ? "DOWN" : "Board", redisDead ? COL.red : COL.green, 13);
-    lab(cxC, cyC + 14, redisDead ? (settings.gossip ? "gossip" : "Redis") : "Redis", redisDead ? COL.red : COL.muted, 11);
+    circ(cxC, cyC, 27, redisDead ? COL.red : COL.green,
+         redisDead ? "color-mix(in srgb,var(--red) 9%,#fff)" : "color-mix(in srgb,var(--green) 9%,#fff)");
+    lab(cxC, cyC - 2, redisDead ? "DOWN" : "Board", redisDead ? COL.red : COL.green, 11);
+    lab(cxC, cyC + 11, redisDead ? (settings.gossip ? "gossip" : "Redis") : "Redis", redisDead ? COL.red : COL.muted, 9);
+    lab(cxC, cyC + 45, redisDead ? "shared board offline" : (c.green + " / " + TOTAL + " clean"), COL.faint, 9);
   }
 
   // ---- render ----
@@ -893,9 +700,9 @@
         var tk = tickets[k], cl = "hcell ", title = k;
         if (tk.status === "green") cl += "green";
         else if (tk.status === "orphaned") { cl += "orphaned"; title += " · " + (tk.claimed_by || "") + " down"; }
-        else if (tk.lock) { var hb = agentById(tk.lock.holder), hz = hb && !hb.dead && !hb.iso; cl += hz ? "amber killable" : "alert"; title += " · " + tk.lock.holder + (hz ? " · click to kill holder" : " down"); }
+        else if (tk.lock) { var hb = agentById(tk.lock.holder), hz = hb && !hb.dead && !hb.iso; cl += hz ? "amber" : "alert"; title += " · " + tk.lock.holder + (hz ? "" : " down"); }
         else cl += "red";
-        hh += '<div class="' + cl + '" title="' + title + '"' + (cl.indexOf("killable") >= 0 ? ' data-k="' + k + '"' : '') + '></div>';
+        hh += '<div class="' + cl + '" title="' + title + '"></div>';
       });
       el.className = "board scale"; el.innerHTML = hh; return;
     }
@@ -905,7 +712,7 @@
     SERVERS.forEach(function (sid) {
       html += '<div class="rowh">' + sid + '</div>';
       VTYPES.forEach(function (v) {
-        var tk = tickets[key(sid, v)], cls = "cell", pill, body = "", attrs = "";
+        var tk = tickets[key(sid, v)], cls = "cell", pill, body = "";
         if (tk.status === "green") {
           cls += " green"; pill = '<span class="stp green">clean ✓</span>';
           body = '<div class="hold">' + (tk.patched_by || "") + '</div>';
@@ -917,8 +724,7 @@
           var h = agentById(tk.lock.holder), healthy = h && !h.dead && !h.iso;
           var pctw = Math.max(0, Math.round(tk.lock.lease / TTL * 100));
           if (healthy) {
-            cls += " amber killable"; pill = '<span class="stp amber">patching</span>';
-            attrs = ' data-k="' + tk.k + '" title="Click to kill ' + tk.lock.holder + ' mid-patch"';
+            cls += " amber"; pill = '<span class="stp amber">patching</span>';
             body = '<div class="hold">' + tk.lock.holder + '</div>'
                  + (tk.cached ? '<div class="note">cached kit</div>' : (tk.attempts ? '<div class="note">' + tk.attempts + ' fail(s)' + (tk.attempts >= 2 ? ', escalated' : '') + '</div>' : ''))
                  + '<div class="lease"><i style="width:' + pctw + '%"></i></div>';
@@ -932,7 +738,7 @@
           cls += " red"; pill = '<span class="stp red">vulnerable</span>';
           body = '<div class="note">' + (tk.attempts ? tk.attempts + ' fail(s), waiting' : 'unclaimed') + '</div>';
         }
-        html += '<div class="' + cls + '"' + attrs + '>' + pill + body + '</div>';
+        html += '<div class="' + cls + '">' + pill + body + '</div>';
       });
     });
     el.innerHTML = html;
@@ -940,7 +746,7 @@
 
   function renderAgents() {
     var el = document.getElementById("agents");
-    document.getElementById("alivePill").textContent = agents.filter(function (a) { return !a.dead; }).length + " / " + agents.length;
+    document.getElementById("alivePill").textContent = agents.filter(function (a) { return !a.dead; }).length + " up";
     if (scaleMode) {
       el.className = "agents scale";
       el.innerHTML = agents.map(function (a, i) {
@@ -974,7 +780,7 @@
     document.getElementById("sAmber").textContent = c.amber;
     document.getElementById("sGreen").textContent = c.green;
     document.getElementById("sTake").textContent = state.takeovers;
-    document.getElementById("pctPill").textContent = Math.round(c.green / TOTAL * 100) + "%";
+    document.getElementById("pctPill").textContent = Math.round(c.green / TOTAL * 100) + "% clean";
     document.getElementById("clock").textContent = "t+" + String(state.t).padStart(3, "0");
     var board = state.redisUp ? "Redis" : (settings.gossip ? "gossip" : "DOWN");
     var sb = document.getElementById("sBoard"); sb.textContent = board;
@@ -1012,13 +818,13 @@
   }
 
   function drawChart() {
-    var d = fitC(chart, cx, 230), W = d.w, H = d.h, pad = 30, padT = 12, padB = 20;
+    var d = fitC(chart, cx, 190), W = d.w, H = d.h, pad = 26, padT = 10, padB = 18;
     cx.clearRect(0, 0, W, H);
     var hist = state.history, maxT = Math.max(20, state.t);
     function X(t) { return pad + (t / maxT) * (W - pad - 8); }
     function Y(v) { return padT + (1 - v / TOTAL) * (H - padT - padB); }
     cx.strokeStyle = "rgba(20,32,46,0.08)"; cx.lineWidth = 1;
-    cx.fillStyle = COL.faint; cx.font = "12px 'IBM Plex Mono', monospace"; cx.textAlign = "right";
+    cx.fillStyle = COL.faint; cx.font = "10px 'IBM Plex Mono', monospace"; cx.textAlign = "right";
     var gstep = Math.max(1, Math.ceil(TOTAL / 3));
     for (var v = 0; v <= TOTAL; v += gstep) { var yy = Y(v); cx.beginPath(); cx.moveTo(pad, yy); cx.lineTo(W - 8, yy); cx.stroke(); cx.fillText(v, pad - 4, yy + 3); }
     if (hist.length > 1) {
@@ -1050,7 +856,7 @@
   }
   function esc(s) { return s.replace(/[&<>]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]; }); }
 
-  function renderAll() { renderBoard(); renderAgents(); renderStatus(); renderLease(); drawChart(); renderLog(); }
+  function renderAll() { renderBoard(); renderAgents(); renderStatus(); drawChart(); renderLog(); }
 
   function frame(ts) {
     if (!lastTs) lastTs = ts;
@@ -1065,15 +871,7 @@
   // function pollServers() { fetch('/api/state').then(r=>r.json()).then(applyState); }
   // function applyState(d){ /* map d.tickets + d.agents onto tickets/agents, then renderAll(); */ }
 
-  document.getElementById("btnKillHolder").addEventListener("click", function () { killAnyHolder(); renderAll(); });
-  document.getElementById("btnRevive").addEventListener("click", function () { reviveDead(); renderAll(); });
-  document.getElementById("ttl").addEventListener("input", function () { setTTL(+this.value); renderAll(); });
-  document.getElementById("wdelay").addEventListener("input", function () { setWorkDelay(+this.value); });
-  // pointerdown, not click: the board re-renders every tick, which can eat a click between press and release
-  document.getElementById("board").addEventListener("pointerdown", function (ev) {
-    var c = ev.target.closest("[data-k]");
-    if (c) { killHolderOf(c.getAttribute("data-k")); renderAll(); }
-  });
+  document.getElementById("btnKill").addEventListener("click", killWorking);
   document.getElementById("btnRedis").addEventListener("click", function () { toggleRedis(); renderAll(); });
   document.getElementById("btnReset").addEventListener("click", reset);
   document.getElementById("btnGossip").addEventListener("click", function () { toggleGossip(); renderAll(); });
@@ -1083,21 +881,9 @@
   document.getElementById("scPart").addEventListener("click", function () { startScenario("partition"); });
   document.getElementById("scRescan").addEventListener("click", function () { startScenario("rescan"); });
   document.getElementById("scCache").addEventListener("click", function () { startScenario("cache"); });
-  function setAgentCount(n) {
-    AGENT_COUNT = n;
-    document.getElementById("nAgents").value = n;
-    document.getElementById("nAgentsOut").textContent = n;
-  }
-  document.getElementById("btnScale").addEventListener("click", function () { scaleMode = !scaleMode; this.textContent = scaleMode ? "Scale: 24 servers" : "Scale: 3 servers"; this.classList.toggle("on", scaleMode); setAgentCount(scaleMode ? 12 : 4); reset(); });
-  document.getElementById("nAgents").addEventListener("input", function () {
-    setAgentCount(+this.value);
-    reset();
-    addLog("sys", "swarm restarted with " + AGENT_COUNT + " agent" + (AGENT_COUNT === 1 ? "" : "s")
-      + (AGENT_COUNT === 1 ? " — kill it and nobody is left to take over" : ""));
-    renderAll();
-  });
+  document.getElementById("btnScale").addEventListener("click", function () { scaleMode = !scaleMode; this.textContent = scaleMode ? "Scale: 24 servers" : "Scale: 3 servers"; this.classList.toggle("on", scaleMode); reset(); });
   document.getElementById("btnPlay").addEventListener("click", function () { running = !running; this.textContent = running ? "Pause" : "Play"; });
-  document.getElementById("speed").addEventListener("input", function () { speed = +this.value; document.getElementById("speedOut").textContent = speed + "\u00d7"; });
+  document.getElementById("speed").addEventListener("input", function () { speed = +this.value; });
   document.getElementById("agents").addEventListener("click", function (ev) {
     var kB = ev.target.closest("[data-kill]"), iB = ev.target.closest("[data-iso]");
     if (kB) killAgent(agents[+kB.getAttribute("data-kill")]);
