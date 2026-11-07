@@ -7,6 +7,9 @@ server runs an agent that patches itself, verifies the fix, and passes it to its
 neighbours — so immunity spreads across the fleet faster than the worm spreads
 infection, and no single point of failure can stop it.
 
+## The vulnerable image
+docker pull vulhub/php:8.1-backdoor
+
 ## The idea
 
 Most distributed systems are built to stay consistent: when the network splits,
