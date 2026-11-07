@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHPirates — patch approvals</title>
+<style>
+  :root { --bg:#0f1720; --panel:#17212d; --ink:#e6edf3; --muted:#8b98a7;
+          --green:#30a46c; --red:#e5484d; --line:#26323f; --add:#1b3a2a; --del:#3a1b1f; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 system-ui, sans-serif; }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:19px; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:13px; }
+  main { padding:16px 20px; display:grid; gap:16px; max-width:900px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .card h2 { margin:0; padding:12px 14px; font-size:15px; border-bottom:1px solid var(--line); }
+  .card .meta { padding:4px 14px 0; color:var(--muted); font-size:12px; }
+  pre { margin:10px 14px; padding:12px; background:#0c131b; border-radius:8px; overflow:auto;
+        font:12px/1.45 ui-monospace, monospace; max-height:340px; }
+  pre .a { color:#6ee7a8; background:var(--add); display:block; }
+  pre .d { color:#ff9ba1; background:var(--del); display:block; }
+  pre .h { color:#7aa2d6; display:block; }
+  .actions { display:flex; gap:10px; padding:0 14px 14px; }
+  button { border:0; border-radius:8px; padding:8px 16px; font-weight:600; cursor:pointer; color:#fff; }
+  .ok { background:var(--green); } .no { background:var(--red); }
+  .empty { color:var(--muted); padding:20px; text-align:center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Patch approvals</h1>
+  <p>Each patch below was written by an agent and already passed its exploit check. Nothing goes
+     live until you approve it. This page is a fallback for the n8n flow — both write the same state.</p>
+</header>
+<main id="main"><div class="empty">loading…</div></main>
+<script>
+function colorize(diff) {
+  return (diff || "(no diff)").split("\n").map(l => {
+    const e = l.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    if (l.startsWith("+++") || l.startsWith("---") || l.startsWith("@@")) return `<span class="h">${e}</span>`;
+    if (l[0] === "+") return `<span class="a">${e}</span>`;
+    if (l[0] === "-") return `<span class="d">${e}</span>`;
+    return e;
+  }).join("\n");
+}
+function form(action, key, label, cls) {
+  return `<form method="post" action="/ui/${action}" style="display:inline">
+    <input type="hidden" name="key" value="${key}">
+    <button class="${cls}">${label}</button></form>`;
+}
+async function load() {
+  const main = document.getElementById("main");
+  try {
+    const d = await (await fetch("/api/reviews", { cache: "no-store" })).json();
+    if (!d.ok) throw new Error(d.error);
+    if (!d.reviews.length) { main.innerHTML = '<div class="empty">No patches waiting for approval.</div>'; return; }
+    main.innerHTML = d.reviews.map(rv => `
+      <div class="card">
+        <h2>${rv.server} · ${rv.vuln} <span style="color:var(--muted)">(${rv.type})</span></h2>
+        <div class="meta">proposed by ${rv.proposed_by || "?"} · ${rv.verified || ""}</div>
+        <pre>${colorize(rv.diff)}</pre>
+        <div class="actions">${form("approve", rv.key, "Approve", "ok")}${form("reject", rv.key, "Reject", "no")}</div>
+      </div>`).join("");
+  } catch (e) {
+    main.innerHTML = `<div class="empty">Cannot reach Redis: ${e.message}</div>`;
+  }
+}
+load();
+setInterval(load, 2000);
+</script>
+</body>
+</html>
