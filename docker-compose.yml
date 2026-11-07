@@ -15,6 +15,7 @@ x-agent-env: &agent-env
   LLM_MODEL_STRONG: ${LLM_MODEL_STRONG:-}
   LOCK_TTL: ${LOCK_TTL:-90}
   WORK_DELAY: ${WORK_DELAY:-0}
+  REQUIRE_APPROVAL: ${REQUIRE_APPROVAL:-}
 
 x-agent: &agent
   build: ./src/agent
@@ -51,6 +52,30 @@ services:
     ports: ["5000:5000"]
     depends_on: [redis]
 
+  # Optional human-in-the-loop gate (n8n track). Only does anything when the agents
+  # run with REQUIRE_APPROVAL=1. It approves/rejects finished patches; it never
+  # assigns work, so it is not a coordinator. Safe to leave running regardless.
+  approvals:
+    build: ./src/approvals
+    environment: { REDIS_URL: "redis://redis:6379/0" }
+    networks: [swarm, hostlink]
+    ports: ["5001:5001"]
+    depends_on: [redis]
+
+  # n8n only starts with:  docker compose --profile n8n up -d
+  # Air-gapped; it drives the approvals API above. Import n8n/approval-workflow.json.
+  n8n:
+    image: n8nio/n8n:1.68.0
+    profiles: ["n8n"]
+    environment:
+      N8N_SECURE_COOKIE: "false"
+      GENERIC_TIMEZONE: "UTC"
+      APPROVALS_BASE: "http://approvals:5001"
+    networks: [swarm, hostlink]
+    ports: ["5678:5678"]
+    volumes: ["n8n-data:/home/node/.n8n"]
+    depends_on: [approvals]
+
 networks:
   swarm:
     internal: true    # servers + Redis: no route out of the sandbox
@@ -60,3 +85,4 @@ volumes:
   s1-site:
   s2-site:
   s3-site:
+  n8n-data:

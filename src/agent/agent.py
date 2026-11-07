@@ -18,6 +18,7 @@ Usage:
   python agent.py --solo s1 sqli-login  # build step 3: patch one bug, no Redis
 """
 import argparse
+import difflib
 import json
 import os
 import random
@@ -40,6 +41,10 @@ ESCALATE_AFTER = int(os.environ.get("ESCALATE_AFTER", "2"))
 WORK_DELAY = float(os.environ.get("WORK_DELAY", "0"))      # demo: hold the lease longer
 FAIL_COOLDOWN = float(os.environ.get("FAIL_COOLDOWN", "20"))  # let other agents try first
 EXPLOIT_TIMEOUT = float(os.environ.get("EXPLOIT_TIMEOUT", "60"))
+# Opt-in human-in-the-loop (n8n track). OFF by default, so the core demo is unchanged.
+# When ON, a verified patch is staged and the ticket parks at `review` until a human
+# (via the approvals service / n8n) flips it to `approved`; only then does it go live.
+REQUIRE_APPROVAL = os.environ.get("REQUIRE_APPROVAL", "").lower() not in ("", "0", "false", "no")
 AGENT_ID = os.environ.get("AGENT_ID") or "%s-%s" % (socket.gethostname(), uuid.uuid4().hex[:4])
 
 VULNERABLE, PATCHED, BROKEN, UNREACHABLE = 0, 1, 2, 3
@@ -57,6 +62,10 @@ def lock_key(vkey):
 
 def orig_key(vkey):
     return "orig:" + vkey.split(":", 1)[1]
+
+
+def patch_key(vkey):
+    return "patch:" + vkey.split(":", 1)[1]
 
 
 # ---------------------------------------------------------------- environment
@@ -300,7 +309,9 @@ def pick_and_claim(r, cooldown):
         if raw is None or lock is not None:      # live lock = someone is on it
             continue
         t = json.loads(raw)
-        if t.get("status") == "green" or t.get("type") not in SPECIALISMS:
+        # green = done; review = waiting on a human (not ours to touch). Everything
+        # else — red, orphaned amber, or approved-and-ready-to-apply — is claimable.
+        if t.get("status") in ("green", "review") or t.get("type") not in SPECIALISMS:
             continue
         if cooldown.get(key, 0) > now:
             continue
@@ -313,16 +324,82 @@ def pick_and_claim(r, cooldown):
     return None
 
 
+def diff_of(r, key, ticket):
+    """Unified diff of the pristine file vs what is on disk now (for the dashboard)."""
+    try:
+        patched = read_file(os.path.join(SERVERS_DIR, ticket["server"], ticket["file"]))
+    except OSError:
+        return ""
+    pristine = r.get(orig_key(key)) or ""
+    return "".join(difflib.unified_diff(
+        pristine.splitlines(True), patched.splitlines(True),
+        "original/" + ticket["file"], "patched/" + ticket["file"]))
+
+
+def stage_for_review(r, key, lease, sid, ticket):
+    """Approval mode: a verified patch is on disk now. Stash it, revert the live file
+    to pristine (nothing goes live without sign-off), and park the ticket at `review`."""
+    path = os.path.join(SERVERS_DIR, sid, ticket["file"])
+    patched = read_file(path)
+    pristine = r.get(orig_key(key))
+    diff = "".join(difflib.unified_diff(
+        (pristine or "").splitlines(True), patched.splitlines(True),
+        "original/" + ticket["file"], "patched/" + ticket["file"]))
+    r.set(patch_key(key), patched)                 # staged, applied verbatim on approval
+    if pristine is not None:
+        write_atomic(path, pristine)               # fix is held back until approved
+    lease.modify(lambda t: t.update(
+        status="review", claimed_by=None, lease_expires=None,
+        proposed_by=AGENT_ID, proposed_diff=diff[:4000],
+        verified=ticket.get("_note", "")))
+    log("REVIEW %s: patch staged, awaiting human approval" % key)
+
+
+def apply_approved(r, key, lease, sid, ticket):
+    """A human approved the staged patch. Write it, re-verify (defence in depth), go green."""
+    staged = r.get(patch_key(key))
+    if staged is None:
+        lease.modify(lambda t: t.update(status="red", claimed_by=None, lease_expires=None,
+                                        last_note="approved but no staged patch found"))
+        return
+    path = os.path.join(SERVERS_DIR, sid, ticket["file"])
+    write_atomic(path, staged)
+    code, detail = run_exploit(sid, ticket)
+    if code == PATCHED:
+        r.delete(patch_key(key))
+        lease.modify(lambda t: t.update(status="green", claimed_by=None, patched_by=AGENT_ID,
+                                        lease_expires=None, verified="approved + " + detail))
+        log("GREEN %s: approved and applied (%s)" % (key, detail))
+    else:
+        if ticket.get("_pristine") is not None:
+            write_atomic(path, ticket["_pristine"])
+        lease.modify(lambda t: t.update(status="red", claimed_by=None, lease_expires=None,
+                                        last_note="approved patch failed re-verification: " + detail))
+        log("re-verify after approval failed for %s: %s" % (key, detail))
+
+
 def work(r, key, cooldown):
     global working_on
     lease = Lease(r, key).start()
     working_on = key
     try:
         ticket = lease.read()
-        if ticket.get("status") == "green":     # finished by someone between scan and claim
+        status = ticket.get("status")
+        if status in ("green", "review"):          # finished, or claimed between scan and now
             return
         prev = ticket.get("claimed_by")
-        takeover = ticket.get("status") == "amber" and prev and prev != AGENT_ID
+
+        # An approved ticket just needs its staged patch applied — no model call.
+        if status == "approved":
+            if not lease.modify(lambda t: t.update(claimed_by=AGENT_ID, lease_expires=time.time() + LOCK_TTL)):
+                return
+            log("claimed %s (approved; applying staged patch)" % key)
+            ticket = lease.read()
+            ticket["_pristine"] = r.get(orig_key(key))
+            apply_approved(r, key, lease, ticket["server"], ticket)
+            return
+
+        takeover = status == "amber" and prev and prev != AGENT_ID
 
         def claim(t):
             if takeover:
@@ -341,9 +418,15 @@ def work(r, key, cooldown):
         if outcome == "lost":
             log("lost the lease on %s mid-patch; dropping it" % key)
         elif outcome == "patched":
-            lease.modify(lambda t: t.update(status="green", claimed_by=None, patched_by=AGENT_ID,
-                                            lease_expires=None, verified=note))
-            log("GREEN %s: %s" % (key, note))
+            if REQUIRE_APPROVAL:
+                t = lease.read()
+                t["_note"] = note
+                stage_for_review(r, key, lease, t["server"], t)
+            else:
+                d = diff_of(r, key, ticket)
+                lease.modify(lambda t: t.update(status="green", claimed_by=None, patched_by=AGENT_ID,
+                                                lease_expires=None, verified=note, proposed_diff=d[:4000]))
+                log("GREEN %s: %s" % (key, note))
         elif outcome == "failed":
             def fail(t):
                 t["attempts"].append(("FAIL %s: %s" % (AGENT_ID, note))[:300])

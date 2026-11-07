@@ -35,12 +35,17 @@ def state():
                     continue
                 t = json.loads(raw)
                 holder, ttl = res[2 * i], res[2 * i + 1]
-                if t.get("status") == "green":
+                status = t.get("status")
+                if status == "green":
                     view = "green"
+                elif status == "review":
+                    view = "review"            # patch staged, waiting on a human
+                elif status == "approved" and not holder:
+                    view = "approved"          # human said yes, an agent will apply it
                 elif holder:
                     view = "amber"
-                elif t.get("status") == "amber":
-                    view = "orphaned"   # claimed by an agent whose lock has expired
+                elif status == "amber":
+                    view = "orphaned"          # claimed by an agent whose lock has expired
                 else:
                     view = "red"
                 t.update(key=k, holder=holder, lease_left=ttl if holder else None, view=view)
@@ -50,9 +55,39 @@ def state():
         if akeys:
             agents = [json.loads(a) for a in r.mget(akeys) if a]
             agents.sort(key=lambda a: a["id"])
-        return jsonify(ok=True, now=time.time(), tickets=tickets, agents=agents)
+        return jsonify(ok=True, now=time.time(), tickets=tickets, agents=agents,
+                       metrics=compute_metrics(tickets))
     except redis.RedisError as e:
         return jsonify(ok=False, error=str(e)), 503
+
+
+def compute_metrics(tickets):
+    """Derived only from ticket data, so it reads the same whenever you open the page.
+
+    effectiveness = verified fixes / patch attempts, where an attempt is each green plus
+                    each FAIL note (a patch that did not hold). Human rejections excluded.
+    patches/min   = fixes / (last fix - first activity), i.e. throughput over the window
+                    the swarm was actually working; it does not decay after completion.
+    """
+    now = time.time()
+    greens = [t for t in tickets if t.get("status") == "green"]
+    fails = sum(1 for t in tickets for a in t.get("attempts", [])
+                if a.startswith("FAIL") and "rejected" not in a)
+    attempts = len(greens) + fails
+    ups = [t["updated_at"] for t in tickets if t.get("updated_at")]
+    run_start = min(ups) if ups else now
+    green_ups = [t["updated_at"] for t in greens if t.get("updated_at")]
+    last = max(green_ups) if green_ups else now
+    window = max(last - run_start, 1.0)                 # seconds; floored so no divide-by-0
+    return {
+        "total": len(tickets),
+        "green": len(greens),
+        "attempts": attempts,
+        "failed_attempts": fails,
+        "effectiveness": (len(greens) / attempts) if attempts else None,   # 0..1
+        "patches_per_min": len(greens) / (window / 60.0),
+        "elapsed_sec": int(now - run_start),
+    }
 
 
 if __name__ == "__main__":
