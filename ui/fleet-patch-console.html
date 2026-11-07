@@ -94,11 +94,13 @@
 
   .agents { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
   .agent { display: flex; flex-direction: column; gap: 6px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; }
-  .agent.dead { opacity: .5; }
-  .agent.iso { border-style: dashed; border-color: color-mix(in srgb, var(--amber) 50%, var(--line2)); }
+  .agent.dead { border-color: color-mix(in srgb, var(--red) 45%, var(--line2)); background: color-mix(in srgb, var(--red) 6%, #fff); }
+  .agent.dead .tag { color: var(--red); font-weight: 600; }
+  .agent.iso { border-style: dashed; border-color: color-mix(in srgb, var(--amber) 50%, var(--line2)); background: color-mix(in srgb, var(--amber) 6%, #fff); }
+  .agent.iso .tag { color: var(--amber-soft); font-weight: 600; }
   .agent .top { display: flex; align-items: center; gap: 7px; }
   .hb { width: 8px; height: 8px; border-radius: 50%; background: var(--green); flex: none; }
-  .agent.dead .hb { background: var(--dead); }
+  .agent.dead .hb { background: var(--red); }
   .agent.iso .hb { background: var(--amber); }
   .agent .id { font-family: var(--mono); font-size: 12px; font-weight: 600; }
   .agent .tag { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--faint); }
@@ -189,6 +191,8 @@
           <button id="scLease">Demo: lease takeover</button>
           <button id="scGossip">Demo: Redis down &rarr; gossip</button>
           <button id="scPart">Demo: network partition</button>
+          <button id="scRescan">Demo: re-scan catch</button>
+          <button id="scCache">Demo: cached patch</button>
           <p style="margin:4px 2px 0;font-size:11px;color:var(--faint);line-height:1.4">Each resets, gets the swarm busy, then triggers one feature so you can watch it happen.</p>
         </div>
       </div>
@@ -504,6 +508,15 @@
         { at: 15, fn: function () { var z = agents.filter(function (a) { return a.iso; }); if (z.length) { addLog("sys", "SCENARIO: reconnecting " + z[0].id); toggleIso(z[0]); } } }
       ];
       state.scenarioMsg = "Partition — one agent is cut off, its lease lapses and the work is taken over; then it rejoins.";
+    } else if (name === "cache") {
+      steps = [{ at: 1, fn: function () { state.kit["sqli"] = true; addLog("sys", "SCENARIO: a SQLi fix is already cached — those tickets skip the model"); } }];
+      state.scenarioMsg = "Patch-kit cache — SQLi tickets reuse a cached fix (shorter leases, 'cached kit' labels) while XSS and upload take the full model.";
+    } else if (name === "rescan") {
+      steps = [
+        { at: 1, fn: function () { if (!settings.rescan) toggleRescan(); addLog("sys", "SCENARIO: periodic re-scan is ON"); } },
+        { at: 13, fn: function () { var g = order.filter(function (k) { return tickets[k].status === "green"; }); if (g.length) { var k = g[0], tk = tickets[k]; tk.status = "red"; tk.lock = null; tk.claimed_by = null; tk.patched_by = null; tk.attempts = 0; state.done = false; addLog("sys", "SCENARIO: injected a regression on " + k + " — re-scan reopened it"); } } }
+      ];
+      state.scenarioMsg = "Periodic re-scan — a patched ticket silently regresses to red; re-scan reopens it and an agent re-patches it.";
     }
     state.sched = steps;
     renderAll();
@@ -611,13 +624,24 @@
 
     // agents ring
     var letters = ["A", "B", "C", "D"];
+    var pulse = 0.5 + 0.5 * Math.sin(ts / 260);
     A.forEach(function (p, i) {
       var a = agents[i];
-      var stroke = a.dead ? COL.dead : a.iso ? COL.amber : a.workingOn ? COL.accent : COL.muted;
-      circ(p.x, p.y, 17, stroke, a.dead ? "#f3f4f6" : "#ffffff", a.iso);
-      if (a.dead) { ax.strokeStyle = COL.dead; ax.lineWidth = 2; ax.beginPath(); ax.moveTo(p.x - 5, p.y - 5); ax.lineTo(p.x + 5, p.y + 5); ax.moveTo(p.x + 5, p.y - 5); ax.lineTo(p.x - 5, p.y + 5); ax.stroke(); }
+      if (a.dead || a.iso) {
+        var halo = a.dead ? COL.red : COL.amber;
+        ax.save();
+        ax.beginPath(); ax.arc(p.x, p.y, 25, 0, 7);
+        ax.fillStyle = (a.dead ? "rgba(209,52,44," : "rgba(242,107,0,") + (0.10 + pulse * 0.10) + ")"; ax.fill();
+        ax.setLineDash([3, 3]); ax.strokeStyle = halo; ax.lineWidth = 2; ax.stroke();
+        ax.restore();
+      }
+      var stroke = a.dead ? COL.red : a.iso ? COL.amber : a.workingOn ? COL.accent : COL.muted;
+      circ(p.x, p.y, 17, stroke, a.dead ? "color-mix(in srgb,var(--red) 10%,#fff)" : "#ffffff");
+      if (a.dead) { ax.strokeStyle = COL.red; ax.lineWidth = 2.4; ax.beginPath(); ax.moveTo(p.x - 6, p.y - 6); ax.lineTo(p.x + 6, p.y + 6); ax.moveTo(p.x + 6, p.y - 6); ax.lineTo(p.x - 6, p.y + 6); ax.stroke(); }
       else { lab(p.x, p.y + 4, letters[i], a.workingOn ? COL.accent : COL.muted, 12); }
-      lab(p.x, (p.y > cyC ? p.y + 31 : p.y - 25), "agent-" + letters[i].toLowerCase(), COL.faint, 9);
+      var nmCol = a.dead ? COL.red : a.iso ? COL["amber-soft"] : COL.faint;
+      var nmTxt = "agent-" + letters[i].toLowerCase() + (a.dead ? " DOWN" : a.iso ? " ISO" : "");
+      lab(p.x, (p.y > cyC ? p.y + 31 : p.y - 25), nmTxt, nmCol, a.dead || a.iso ? 10 : 9);
     });
 
     // central shared board (hub)
@@ -666,7 +690,7 @@
     agents.forEach(function (a, i) {
       var d = document.createElement("div");
       d.className = "agent" + (a.dead ? " dead" : "") + (a.iso ? " iso" : "");
-      var tag = a.dead ? "offline" : a.iso ? "isolated" : a.workingOn ? phaseOf(a) : "idle";
+      var tag = a.dead ? "DOWN" : a.iso ? "isolated" : a.workingOn ? phaseOf(a) : "idle";
       d.innerHTML =
         '<div class="top"><span class="hb"></span><span class="id">' + a.id + '</span><span class="tag">' + tag + '</span></div>'
         + '<div class="chips">' + a.spec.map(function (s) { return '<span class="chip">' + s + '</span>'; }).join("") + '</div>'
@@ -783,6 +807,8 @@
   document.getElementById("scLease").addEventListener("click", function () { startScenario("lease"); });
   document.getElementById("scGossip").addEventListener("click", function () { startScenario("gossip"); });
   document.getElementById("scPart").addEventListener("click", function () { startScenario("partition"); });
+  document.getElementById("scRescan").addEventListener("click", function () { startScenario("rescan"); });
+  document.getElementById("scCache").addEventListener("click", function () { startScenario("cache"); });
   document.getElementById("btnPlay").addEventListener("click", function () { running = !running; this.textContent = running ? "Pause" : "Play"; });
   document.getElementById("speed").addEventListener("input", function () { speed = +this.value; });
   document.getElementById("agents").addEventListener("click", function (ev) {
