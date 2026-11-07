@@ -1,28 +1,61 @@
-# FleetGuard
+# PHPatch
 
-*GreatUniHack 2026 · Neptune North Challenge — "Actors work better together"*
+**Team PHPirates — Neptune North @ GreatUniHack 2026**
 
-A fleet of PHP web servers that **patches itself against PHP2Shell** (CVE-2026-109618 / CVE-2026-109619) **without a central controller** — and without taking the site down.
-
-## The problem
-PHP2Shell is a critical, actively exploited unauthenticated RCE in PHP core (PHP-FPM, Apache mod_php, LiteSpeed). Fixes shipped 21 Oct 2026; the advice is to patch immediately or take systems offline. Real fleets can't rely on a central console during an incident: it may be overloaded, compromised, or unreachable.
+A self-coordinating PHP patch fleet. When a worm exploits a PHP backdoor, every
+server runs an agent that patches itself, verifies the fix, and passes it to its
+neighbours — so immunity spreads across the fleet faster than the worm spreads
+infection, and no single point of failure can stop it.
 
 ## The idea
-Every server runs a small defensive agent. Agents share one goal — **patch the whole fleet while keeping ≥ X% capacity online** — and coordinate peer-to-peer:
 
-- **Independent decisions:** each agent checks its own PHP version/SAPI against the fixed versions and decides when it is safe to drain → patch → rejoin.
-- **Safe rolling patches:** at most `k` of `N` servers down at once; during a network split, a partition that sees `m` servers may only take down `floor(k·m/N)`.
-- **Resilience when comms fail:** patch status and patched packages spread peer-to-peer; an isolated agent falls back to a safe local policy (protective rule / self-quarantine).
-- **Reconnect:** state merges; the fleet converges to 100 % patched.
+Most distributed systems are built to stay consistent: when the network splits,
+they stop. PHPatch is built to keep working. Each server decides for itself,
+shares the cure with whoever it can reach, tells the truth about its own state,
+and heals the moment communications return.
 
-## Scope & safety
-Strictly defensive. Version checks and **simulated** attack signals only — no exploit code.
+This answers the Neptune North brief directly — actors that work toward a common
+goal, make decisions independently, and keep making progress even when they
+cannot communicate.
 
-## Demo
-~6 simulated servers + live dashboard: alert → waves of patching → kill the console → split the network → reconnect → 100 % patched, site never went down.
+## How it works
 
-## Team
-- Eileen
-- Saif
-- Zak
-- John
+Each server moves through three states:
+
+| State | Meaning |
+|-------|---------|
+| 🔴 **Red** | PHP backdoor present, website vulnerable |
+| 🟠 **Amber** | worm is in, PHP runtime patched, agent now cleaning the site |
+| 🟢 **Green** | agent has verified the site is vulnerability-free — now a patch source |
+
+- The **worm** travels the Docker bridge and carries the patch kit with it.
+- A **dispatcher** helps bootstrap the first fixes, but it is a *helper, not a hub*.
+- Cleaning an amber server needs a **patch source**: the dispatcher, or a **green
+  neighbour** handing over its cached fixes (peer kit).
+- Kill the dispatcher and the cure still spreads server-to-server. Only a fully
+  isolated server with no fix yet will stall — and it reports that honestly
+  rather than falsely declaring itself clean.
+
+## Demo dashboard
+
+`ui/fleet-patch-console.html` is a self-contained ops-room dashboard (no internet
+required — fits the air-gapped lab). It shows the live network graph, a dispatcher
+online/offline indicator, a fleet-state chart, an agent/worm log, and chaos
+controls:
+
+- **Release worm** — or click any node to seed it there
+- **Kill dispatcher** — watch the cure keep spreading peer-to-peer
+- **Kill a server** / **Cut links** — prove resilience to node loss and partitions
+
+It runs a built-in simulation out of the box. To go live, wire real server
+telemetry into the `pollServers()` / `applyFleet()` hooks near the bottom of the
+file.
+
+## Safety & scope
+
+Everything runs in an **air-gapped lab** on our own deliberately-vulnerable
+servers. The "worm" is a scoped remediation agent that only ever touches the
+authorised fleet — never the open internet. We built this to study whether
+automated remediation can outrun a threat, and to show why real-world "vigilante
+patching" is as dangerous as it is tempting (no consent, unpredictable blast
+radius).
