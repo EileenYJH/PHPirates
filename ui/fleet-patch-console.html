@@ -45,6 +45,8 @@
 
   .arch-body { padding: 6px 10px 10px; }
   #arch { display: block; width: 100%; height: auto; }
+  .archcap { margin: 2px 4px 6px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+  .archcap b { color: var(--text); font-weight: 600; }
 
   .clegend { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .clegend span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
@@ -159,14 +161,17 @@
   </div>
 
   <div class="card">
-    <div class="card-h"><span class="t">System architecture — live</span><span class="pill mono" id="archMode">stigmergic · no coordinator</span></div>
-    <div class="arch-body"><canvas id="arch"></canvas></div>
+    <div class="card-h"><span class="t">How it works — live</span><span class="clegend"><span><i style="background:var(--accent)"></i>coordinate</span><span><i style="background:var(--amber)"></i>patch</span><span><i style="background:var(--red)"></i>verify</span></span><span class="pill mono" id="archMode">stigmergic</span></div>
+    <div class="arch-body">
+      <p class="archcap">No agent talks to another. Each one reads and writes <b>one shared board</b> (Redis) — take a ticket, hold a lease, post the fix. That shared board is the only way they coordinate, so losing an agent loses nothing.</p>
+      <canvas id="arch"></canvas>
+    </div>
   </div>
 
   <div class="grid">
     <div class="card">
       <div class="card-h">
-        <span class="t">Redis blackboard — tickets</span>
+        <span class="t">The shared board — one ticket per bug</span>
         <span class="clegend">
           <span><i style="background:var(--red)"></i>vulnerable</span>
           <span><i style="background:var(--amber)"></i>patching</span>
@@ -500,50 +505,85 @@
     }
   }
   function drawArch(ts) {
-    var d = fitC(arch, ax, 176), W = d.w;
-    ax.clearRect(0, 0, W, d.h);
-    var nw = Math.max(92, Math.min(130, W * 0.19)), nh = 44, y = 54;
-    var P = {
-      ollama: { x: W * 0.105, y: y }, agents: { x: W * 0.37, y: y },
-      redis: { x: W * 0.64, y: y }, dash: { x: W * 0.885, y: y },
-      targets: { x: W * 0.37, y: 142 }
-    };
+    var d = fitC(arch, ax, 230), W = d.w, H = d.h;
+    ax.clearRect(0, 0, W, H);
+    var cxC = W * 0.44, cyC = 100;
+    var Ra = Math.max(64, Math.min(92, W * 0.14));
+    var redisDead = !state.redisUp, gossipMode = redisDead && settings.gossip;
+    var O = { x: Math.max(48, W * 0.10), y: cyC };
+    var D = { x: cxC, y: H - 30 };
+    var T = [ { x: W * 0.80, y: cyC - 44 }, { x: W * 0.845, y: cyC }, { x: W * 0.80, y: cyC + 44 } ];
+    var ang = [210, 330, 150, 30], A = [];
+    for (var i = 0; i < 4; i++) { var th = ang[i] * Math.PI / 180; A.push({ x: cxC + Ra * Math.cos(th), y: cyC + Ra * Math.sin(th) }); }
+
     var work = agents.filter(function (a) { return !a.dead && !a.iso && a.workingOn; });
     var thinkN = work.filter(function (a) { return phaseOf(a) === "think"; }).length;
-    var verifyN = work.filter(function (a) { return phaseOf(a) === "verify"; }).length;
-    var coordN = coordOK() ? work.length : 0;
-    var gossipMode = !state.redisUp && settings.gossip;
-    var redisDead = !state.redisUp;
 
-    // edges
-    edge(ax, P.ollama.x + nw / 2, y, P.agents.x - nw / 2, y, thinkN > 0);
-    edge(ax, P.agents.x + nw / 2, y, P.redis.x - nw / 2, y, coordN > 0 && !redisDead);
-    edge(ax, P.redis.x + nw / 2, y, P.dash.x - nw / 2, y, !redisDead);
-    edge(ax, P.agents.x, y + nh / 2, P.targets.x, P.targets.y - 20, verifyN > 0);
+    function link(x1, y1, x2, y2, active, dash) {
+      ax.save(); if (dash) ax.setLineDash([4, 4]);
+      ax.strokeStyle = active ? "rgba(74,88,105,0.55)" : "rgba(120,134,152,0.18)";
+      ax.lineWidth = active ? 1.7 : 1;
+      ax.beginPath(); ax.moveTo(x1, y1); ax.lineTo(x2, y2); ax.stroke(); ax.restore();
+    }
 
-    // flowing dots
-    if (thinkN) dots(ax, P.ollama.x + nw / 2, y, P.agents.x - nw / 2, y, Math.min(thinkN, 3), COL.amber, ts, false);
-    if (coordN && !redisDead) dots(ax, P.agents.x + nw / 2, y, P.redis.x - nw / 2, y, Math.min(coordN, 3), COL.accent, ts, false);
-    if (!redisDead) dots(ax, P.redis.x + nw / 2, y, P.dash.x - nw / 2, y, 1, COL.dead, ts, false);
-    if (verifyN) dots(ax, P.agents.x, y + nh / 2, P.targets.x, P.targets.y - 20, Math.min(verifyN, 3), COL.red, ts, false);
+    // links to the central shared board
+    link(cxC, cyC, O.x, O.y, thinkN > 0 && !redisDead, false);
+    link(cxC, cyC, D.x, D.y, !redisDead, false);
+    T.forEach(function (t) { link(cxC, cyC, t.x, t.y, false, false); });
+    A.forEach(function (p, i) { var a = agents[i]; var act = !a.dead && a.workingOn && !redisDead && !gossipMode; link(cxC, cyC, p.x, p.y, act, gossipMode); });
+
+    // when the board is down but gossip is on, agents link peer-to-peer in a ring
+    var ro = [0, 1, 3, 2];
+    if (gossipMode) {
+      for (var g = 0; g < 4; g++) { var q1 = A[ro[g]], q2 = A[ro[(g + 1) % 4]]; if (!agents[ro[g]].dead && !agents[ro[(g + 1) % 4]].dead) link(q1.x, q1.y, q2.x, q2.y, true, true); }
+    }
+
+    // live traffic along the links
+    if (!redisDead) {
+      A.forEach(function (p, i) { var a = agents[i]; if (!a.dead && !a.iso && a.workingOn) dots(ax, p.x, p.y, cxC, cyC, 1, COL.accent, ts, false); });
+      if (thinkN) dots(ax, O.x, O.y, cxC, cyC, Math.min(thinkN, 3), COL.amber, ts, false);
+      work.forEach(function (a) { if (phaseOf(a) === "verify") { var si = SERVERS.indexOf(tickets[a.workingOn].server); if (si >= 0) dots(ax, T[si].x, T[si].y, cxC, cyC, 1, COL.red, ts, false); } });
+      dots(ax, cxC, cyC, D.x, D.y, 1, COL.dead, ts, false);
+    } else if (gossipMode) {
+      for (var g2 = 0; g2 < 4; g2++) { var s1 = A[ro[g2]], s2 = A[ro[(g2 + 1) % 4]]; if (!agents[ro[g2]].dead) dots(ax, s1.x, s1.y, s2.x, s2.y, 1, COL.amber, ts, false); }
+    }
+
+    function circ(x, y, r, stroke, fill, dash) {
+      ax.save(); if (dash) ax.setLineDash([3, 3]);
+      ax.beginPath(); ax.arc(x, y, r, 0, 7); ax.fillStyle = fill || "#ffffff"; ax.fill();
+      ax.lineWidth = 2; ax.strokeStyle = stroke; ax.stroke(); ax.restore();
+    }
+    function lab(x, y, txt, color, size, align) {
+      ax.fillStyle = color; ax.font = (size || 10) + "px 'IBM Plex Mono', monospace"; ax.textAlign = align || "center"; ax.fillText(txt, x, y);
+    }
 
     var c = counts();
-    var tint = function (v, pc) { return "color-mix(in srgb, var(--" + v + ") " + pc + "%, #fff)"; };
-    node(ax, P.ollama.x, y, nw, nh, COL.amber, "Ollama", "writes patch");
-    var aStroke = gossipMode ? COL.amber : COL.accent;
-    node(ax, P.agents.x, y, nw, nh, aStroke, "Agents ×" + agents.filter(function (a) { return !a.dead; }).length,
-         gossipMode ? "gossip mode" : (work.length + " working"));
-    node(ax, P.redis.x, y, nw, nh, redisDead ? COL.red : COL.green, redisDead ? "Redis DOWN" : "Redis blackboard",
-         redisDead ? (settings.gossip ? "bypassed by gossip" : "unreachable") : (c.green + "g · " + c.amber + "a · " + (c.red + c.orph) + "r"));
-    node(ax, P.dash.x, y, nw, nh, COL.dead, "Dashboard", "read-only");
-    node(ax, P.targets.x, P.targets.y, nw, 40, COL.red, "s1 · s2 · s3", "PHP targets");
+    // outer nodes
+    circ(O.x, O.y, 15, COL.amber, "color-mix(in srgb,var(--amber) 8%,#fff)");
+    lab(O.x, O.y - 21, "Ollama", COL["amber-soft"], 10);
+    lab(O.x, O.y + 4, "AI", COL["amber-soft"], 10);
+    lab(T[0].x + 17, T[0].y - 14, "targets", COL.faint, 9, "left");
+    T.forEach(function (t, i) { circ(t.x, t.y, 12, COL.red, "color-mix(in srgb,var(--red) 7%,#fff)"); lab(t.x + 18, t.y + 3, SERVERS[i], COL.muted, 10, "left"); });
+    circ(D.x, D.y, 13, COL.dead, "color-mix(in srgb,var(--dead) 12%,#fff)");
+    lab(D.x, D.y + 26, "Dashboard", COL.muted, 10);
 
-    // edge captions
-    ax.fillStyle = COL.faint; ax.font = "10px 'IBM Plex Mono', monospace"; ax.textAlign = "center";
-    ax.fillText("patch", (P.ollama.x + nw / 2 + P.agents.x - nw / 2) / 2, y - 9);
-    ax.fillText(redisDead ? (settings.gossip ? "gossip" : "— down —") : "claim · write", (P.agents.x + nw / 2 + P.redis.x - nw / 2) / 2, y - 9);
-    ax.fillText("reads", (P.redis.x + nw / 2 + P.dash.x - nw / 2) / 2, y - 9);
-    ax.textAlign = "left"; ax.fillText("exploit · verify", P.agents.x + 8, (y + nh / 2 + P.targets.y - 20) / 2 + 3);
+    // agents ring
+    var letters = ["A", "B", "C", "D"];
+    A.forEach(function (p, i) {
+      var a = agents[i];
+      var stroke = a.dead ? COL.dead : a.iso ? COL.amber : a.workingOn ? COL.accent : COL.muted;
+      circ(p.x, p.y, 17, stroke, a.dead ? "#f3f4f6" : "#ffffff", a.iso);
+      if (a.dead) { ax.strokeStyle = COL.dead; ax.lineWidth = 2; ax.beginPath(); ax.moveTo(p.x - 5, p.y - 5); ax.lineTo(p.x + 5, p.y + 5); ax.moveTo(p.x + 5, p.y - 5); ax.lineTo(p.x - 5, p.y + 5); ax.stroke(); }
+      else { lab(p.x, p.y + 4, letters[i], a.workingOn ? COL.accent : COL.muted, 12); }
+      lab(p.x, (p.y > cyC ? p.y + 31 : p.y - 25), "agent-" + letters[i].toLowerCase(), COL.faint, 9);
+    });
+
+    // central shared board (hub)
+    circ(cxC, cyC, 27, redisDead ? COL.red : COL.green,
+         redisDead ? "color-mix(in srgb,var(--red) 9%,#fff)" : "color-mix(in srgb,var(--green) 9%,#fff)");
+    lab(cxC, cyC - 2, redisDead ? "DOWN" : "Board", redisDead ? COL.red : COL.green, 11);
+    lab(cxC, cyC + 11, redisDead ? (settings.gossip ? "gossip" : "Redis") : "Redis", redisDead ? COL.red : COL.muted, 9);
+    lab(cxC, cyC + 45, redisDead ? "shared board offline" : (c.green + " / " + TOTAL + " clean"), COL.faint, 9);
   }
 
   // ---- render ----
